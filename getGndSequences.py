@@ -32,13 +32,9 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
     QA_ON = bool(data["QA_ON"])                     # Quantum Annealing;
     HQA_ON = bool(data["HQA_ON"])                   # Hybrid Quantum Annealing;
     
-    lambdaCons   = 5                                # Energy penality for putting two flavours in the same vertex;
-    lambdaSlk    = 5                                # Energy penality for system states that are incompatible with slack variables' values; 
-    lambdaSlkTot = 4                                # Energy penality for system with a wrong number of particles (used only to enforce condition 1?);
-    # epsilon      = 1                              # Energy penality to break the geometric symmetry (reducing the groundspace degeneration);
+    lambdaCons          = 5                         # Energy penality for putting two flavours in the same vertex;
+    lambdaComposition   = 5
 
-    CONTACT_INTERACTION_ON = True
-    
     # --------------------------------------------------------------------------------------#
     # CHOOSE PARAMETERS ASSOCIATED WITH ANNEALING PROCEDURES;
 
@@ -46,7 +42,7 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
     N_STEPS_SA = 1e5                                # Simulated Annealing: number of steps per run;
     N_SWEEPS_QA = int(1e2)                          # Quantum Annealing: number of annealing runs;
     ANNEALING_TIME = 2000                           # Quantum Annealing: annealing time (from 10 to 2000);
-    N_SWEEPS_HQA = 10                               # Hybrid Quantum Annealing: number of runs;
+    N_SWEEPS_HQA = 3                                # Hybrid Quantum Annealing: number of runs;
 
     sep = '\n---------------------------------------------------------------------------------\n'
     print(sep,f'GET GROUND-STATE SEQUENCES FOR EXPERIMENT {EXPERIMENT_IDX}: \t {EXPERIMENT_NAME}',sep)
@@ -57,7 +53,7 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
     cycle_folder = os.path.join(EXPERIMENT_NAME,f'cycle_{CYCLE}') 
    
     # --------------------------------------------------------------------------------------#
-    # Create or load energy map (NEEDS ADAPTATION);
+    # Create or load energy map;
                            
     filePath = os.path.join(cycle_folder, f'dict_size_{DICT_SIZE}.txt') 
     eMap = np.loadtxt(filePath)
@@ -70,89 +66,41 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
     contacts = np.loadtxt(filePath)
     nTotalSites = np.size(contacts,axis=0)
 
-    # Load simple paths;
-    filePath = os.path.join(f'DATA/X_{N_X}_Y_{N_Y}',f'simple_paths_{S_IND}.txt')
-    simple_paths = list()
-    with open(filePath,'r') as fp:
-        [simple_paths.append(np.fromstring(x,dtype=int,sep=' ')) for x in fp.readlines()]
-    
-    # Number of sites in contact;
-    contactSites = list()
-    s = 0
-    for line in contacts:
-        if sum(line) > 0:
-            contactSites.append(s)
-        s += 1
-
-    nContactSites = len(contactSites)
-    nDisconnectedSites = nTotalSites - nContactSites
     print('\nTotal number of sites:\t\t %i'% nTotalSites)
-    print('Number of sites in contact:\t %i' % nContactSites)
-    print('Number of disconnected sites:\t %i\n' % nDisconnectedSites)
 
     # --------------------------------------------------------------------------------------#
     # SETUP OPTIMIZATION PROBLEM;
 
-    q = [[dimod.Binary(label=f'q_{contactSites[s]}_{t}') for t in range(DICT_SIZE)] for s in range(nContactSites)]                                                                  
+    q = [[dimod.Binary(label=f'q_{s}_{t}') for t in range(DICT_SIZE)] for s in range(nTotalSites)]                                                                  
 
-    composition = np.zeros((DICT_SIZE, nDisconnectedSites+1))
-    for t in range(DICT_SIZE):
-        for n in range(-nDisconnectedSites, 1):
-            composition[t,n] = COMPOSITION[t] + n
-    composition = composition.astype(int)
-
-
-    slk = [[dimod.Binary(label=f'slk_{t}_{n}') for n in composition[t,:]]for t in range(DICT_SIZE)]
     energy = 0
-
+    
     # Impose constraints on each site;
-    for s in range(nContactSites):
+    for s in range(nTotalSites):
         sum_tot = 0
         for m in range(DICT_SIZE):
             sum_tot += q[s][m]
         energy += lambdaCons * (sum_tot - 1)**2
     
-    # Impose composition constraints;
-    for t in range(DICT_SIZE):
-        sum_flavour = 0
-        for s in range(nContactSites):
-            sum_flavour += q[s][t]  
-        sum_slack = 0          
-        for n in range(nDisconnectedSites +1):
-            sum_slack += composition[t,n] * slk[t][n]    
-        energy += lambdaSlk * (sum_slack - sum_flavour)**2
-
-    
-    for t in range(DICT_SIZE):
-        sum_tot = 0
-        for n in range(nDisconnectedSites+1):
-            sum_tot += slk[t][n]
-        energy += lambdaSlkTot * (sum_tot - 1)**2  
-    
-    
     # Contribution of contacts;
-    if CONTACT_INTERACTION_ON:    
-        
-        for s1 in range(nContactSites-1):
-            for s2 in range(s1+1,nContactSites):
-                if contacts[contactSites[s1],contactSites[s2]] == 0:
-                    continue
-                else:
-                    for m1 in range(DICT_SIZE):
-                        for m2 in range(DICT_SIZE):
-                            energy += eMap[m1,m2] * q[s1][m1] * q[s2][m2]
-    '''
-    # Adding a term that explicitly breaks the geometric symmetry;
-    for s in simple_paths:
-        max_depth = math.floor(len(s)/2)
-        for depth in range(max_depth):
-            s1, s2 = s[depth], s[len(s)-1-depth]
-            for m1 in range(DICT_SIZE-1):
-                for m2 in range(m1+1,DICT_SIZE):
-                    idx1, idx2 = contactSites.index(s1),contactSites.index(s2)
-                    energy += (epsilon / pow(3,depth)) * q[idx2][m1] * q[idx1][m2]
-    '''
-    
+    for s1 in range(nTotalSites-1):
+        for s2 in range(s1+1,nTotalSites):
+            if contacts[s1,s2] == 0:
+                continue
+            else:
+                for m1 in range(DICT_SIZE):
+                    for m2 in range(DICT_SIZE):
+                        energy += eMap[m1,m2] * q[s1][m1] * q[s2][m2]
+
+    # Composition constraint;
+    sum_composition = 0
+    for m in range(DICT_SIZE):
+        sum_flavor = 0
+        for s in range(nTotalSites):
+            sum_flavor += q[s][m]
+        sum_composition += (sum_flavor - COMPOSITION[m])**2
+    energy += lambdaComposition * sum_composition
+
     bqm = dimod.BinaryQuadraticModel(energy)
     
     # --------------------------------------------------------------------------------------#
