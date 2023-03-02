@@ -1,0 +1,72 @@
+[
+    {
+        "NAME":"Small_lattice_1",
+        "N_X": 4,
+        "N_Y": 4,
+        "DICT_SIZE": 3,
+        "COMPOSITION":[5,5,6],
+        "TARGET_STRUCTURE": 21,
+        "PROBABILITY_THRESHOLD": 0.8,
+        "MODE": "fast",
+        "MAX_CYCLES":7,
+        "QA_ON":0,
+        "SA_ON":0,
+        "HQA_ON":1
+    },
+    {
+        "NAME":"Small_lattice_2",
+        "N_X": 4,
+        "N_Y": 4,
+        "DICT_SIZE": 3,
+        "COMPOSITION":[4,5,7],
+        "TARGET_STRUCTURE": 17,
+        "PROBABILITY_THRESHOLD": 0.9,
+        "MODE": "fast",
+        "MAX_CYCLES":7,
+        "QA_ON":0,
+        "SA_ON":1,
+        "HQA_ON":0
+    },
+    {
+        "NAME":"Intermediate_lattice_1",
+        "N_X": 5,
+        "N_Y": 4,
+        "DICT_SIZE": 3,
+        "COMPOSITION":[6,6,8],
+        "TARGET_STRUCTURE": 74,
+        "PROBABILITY_THRESHOLD": 0.8,
+        "MODE": "fast",
+        "MAX_CYCLES":7,
+        "QA_ON":0,
+        "SA_ON":1,
+        "HQA_ON":0
+    },
+    {
+        "NAME":"Intermediate_lattice_2",
+        "N_X": 5,
+        "N_Y": 4,
+        "DICT_SIZE": 3,
+        "COMPOSITION":[6,7,7],
+        "TARGET_STRUCTURE": 74,
+        "PROBABILITY_THRESHOLD": 0.9,
+        "MODE": "fast",
+        "MAX_CYCLES":7,
+        "QA_ON":0,
+        "SA_ON":1,
+        "HQA_ON":0
+    },
+    {
+        "NAME":"Large_lattice_1",
+        "N_X": 5,
+        "N_Y": 4,
+        "DICT_SIZE": 3,
+        "COMPOSITION":[6,7,7],
+        "TARGET_STRUCTURE": 74,
+        "PROBABILITY_THRESHOLD": 0.9,
+        "MODE": "fast",
+        "MAX_CYCLES":7,
+        "QA_ON":0,
+        "SA_ON":1,
+        "HQA_ON":0
+    }
+]
