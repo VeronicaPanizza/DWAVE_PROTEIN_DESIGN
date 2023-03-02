@@ -13,7 +13,8 @@ def MAIN():
 
     full_data = pd.read_json('experiment.json')
     DICT_SIZE = full_data['DICT_SIZE'][EXPERIMENT_IDXS[0]]
-
+    MAX_CYCLES = full_data['MAX_CYCLES'][EXPERIMENT_IDXS[0]]
+    
     eMap = functions.get_eMap(DICT_SIZE) 
 
     for EXPERIMENT_IDX in EXPERIMENT_IDXS:
@@ -32,7 +33,7 @@ def MAIN():
         np.savetxt(filePath,eMap,fmt= '%.5f',delimiter=' ')
 
     fig = plt.figure()
-    for iteration in range(3):
+    for iteration in range(MAX_CYCLES):
         for EXPERIMENT_IDX in EXPERIMENT_IDXS:
             getGndSequences(EXPERIMENT_IDX,iteration)
             getGndStructures(EXPERIMENT_IDX,iteration)

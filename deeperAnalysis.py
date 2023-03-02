@@ -6,7 +6,7 @@ import json
 from IPython.display import display
 
 
-N_RUNS          = 30
+N_RUNS          = 1
 EXPERIMENT_IDX  = 0
 
 with open('experiment.json', 'r') as f:      
