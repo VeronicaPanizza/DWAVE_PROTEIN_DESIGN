@@ -40,19 +40,32 @@ def getCorrectedEnergyMap(EXPERIMENT_IDXS, CYCLE):
         # LOAD CURRENT EXPERIMENT SETTINGS;
 
         
-        data = full_data[EXPERIMENT_IDX]
+        data                        = full_data[EXPERIMENT_IDX]
         
-        EXPERIMENT_NAME = data["NAME"]                      # Experiment name: will be the output folder;
-        N_X             = int(data["N_X"])                  # Width of the lattice containing the Hamiltonian path;
-        N_Y             = int(data["N_Y"])                  # Height of the lattice containing the Hamiltonian path;
-        S_IND           = int(data["TARGET_STRUCTURE"])     # Index associated with the DESIGNABLE target structure;
-        DICT_SIZE       = int(data["DICT_SIZE"])            # Dictionary size;
+        EXPERIMENT_NAME             = data["NAME"]                      # Experiment name: will be the output folder;
+        N_X                         = int(data["N_X"])                  # Width of the lattice containing the Hamiltonian path;
+        N_Y                         = int(data["N_Y"])                  # Height of the lattice containing the Hamiltonian path;
+        S_IND                       = int(data["TARGET_STRUCTURE"])     # Index associated with the DESIGNABLE target structure;
+        DICT_SIZE                   = int(data["DICT_SIZE"])            # Dictionary size;
+        PROBABILITY_THRESHOLD       = data["PROBABILITY_THRESHOLD"]
+
+        SA_ON                       = bool(data["SA_ON"])               # True: we extract input sequences from "sa.json" file;
+        QA_ON                       = bool(data["QA_ON"])               # True: we extract input sequences from "qa.json" file;
+        HQA_ON                      = bool(data["HQA_ON"])              # True: we extract input sequences from "hqa.json" file;
         
-        SA_ON           = bool(data["SA_ON"])               # True: we extract input sequences from "sa.json" file;
-        QA_ON           = bool(data["QA_ON"])               # True: we extract input sequences from "qa.json" file;
-        HQA_ON          = bool(data["HQA_ON"])              # True: we extract input sequences from "hqa.json" file;
+            
+        if PROBABILITY_THRESHOLD == 0.8 and DICT_SIZE == 3:
+            TEMPERATURE = 0.15323
+        elif PROBABILITY_THRESHOLD == 0.8 and DICT_SIZE == 4:
+            TEMPERATURE = 0.12513
+        elif PROBABILITY_THRESHOLD == 0.9 and DICT_SIZE == 3:
+            TEMPERATURE = 0.19
+        elif PROBABILITY_THRESHOLD == 0.9 and DICT_SIZE == 4:
+            TEMPERATURE = 0.156669679
+        else:
+            print('Unfitted case, please calibrate the temperature.')
+            raise Exception('Unfitted case, please calibrate the temperature')
         
-        TEMPERATURE     = 0.15323
         ALPHA           = 1 
 
         eMapReal = np.loadtxt(os.path.join('ENERGY_MAP',f'dict_size_{DICT_SIZE}.txt'))                  # Load real energy map;

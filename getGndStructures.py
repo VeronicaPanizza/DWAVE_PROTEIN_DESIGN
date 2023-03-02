@@ -29,18 +29,30 @@ def getGndStructures(EXPERIMENT_IDX,CYCLE):
         full_data = json.load(f)
     data = full_data[EXPERIMENT_IDX]
     
-    EXPERIMENT_NAME = data["NAME"]                      # Experiment name: will be the output folder;
-    N_X             = int(data["N_X"])                  # Width of the lattice containing the Hamiltonian path;
-    N_Y             = int(data["N_Y"])                  # Height of the lattice containing the Hamiltonian path;
-    COMPOSITION     = data["COMPOSITION"]               # Composition constraint associated with the sequence;
-    S_IND           = int(data['TARGET_STRUCTURE'])     # Target structure (necessary to extract the N-simple paths);         
-    DICT_SIZE       = int(data["DICT_SIZE"])            # Dictionary size;
-    SA_ON           = bool(data["SA_ON"])               # True: we extract input sequences from "sa.json" file;
-    QA_ON           = bool(data["QA_ON"])               # True: we extract input sequences from "qa.json" file;
-    HQA_ON          = bool(data["HQA_ON"])              # True: we extract input sequences from "hqa.json" file;
-    LENGTH          = N_X * N_Y
-    TEMPERATURE     = 0.15323                           # Modify: add field in experiment.json;
+    EXPERIMENT_NAME         = data["NAME"]                      # Experiment name: will be the output folder;
+    N_X                     = int(data["N_X"])                  # Width of the lattice containing the Hamiltonian path;
+    N_Y                     = int(data["N_Y"])                  # Height of the lattice containing the Hamiltonian path;
+    S_IND                   = int(data["TARGET_STRUCTURE"])     # Target structure (necessary to extract the N-simple paths);         
+    PROBABILITY_THRESHOLD   = data["PROBABILITY_THRESHOLD"]
+
+    DICT_SIZE               = int(data["DICT_SIZE"])            # Dictionary size;
+    SA_ON                   = bool(data["SA_ON"])               # True: we extract input sequences from "sa.json" file;
+    QA_ON                   = bool(data["QA_ON"])               # True: we extract input sequences from "qa.json" file;
+    HQA_ON                  = bool(data["HQA_ON"])              # True: we extract input sequences from "hqa.json" file;
+    LENGTH                  = N_X * N_Y
     
+    if PROBABILITY_THRESHOLD == 0.8 and DICT_SIZE == 3:
+        TEMPERATURE = 0.15323
+    elif PROBABILITY_THRESHOLD == 0.8 and DICT_SIZE == 4:
+        TEMPERATURE = 0.12513
+    elif PROBABILITY_THRESHOLD == 0.9 and DICT_SIZE == 3:
+        TEMPERATURE = 0.19
+    elif PROBABILITY_THRESHOLD == 0.9 and DICT_SIZE == 4:
+        TEMPERATURE = 0.156669679
+    else:
+        print('Unfitted case, please calibrate the temperature.')
+        raise Exception('Unfitted case, please calibrate the temperature')
+
     working_dir = os.path.join(EXPERIMENT_NAME,f'cycle_{CYCLE}')
 
     sep = '\n---------------------------------------------------------------------------------\n'
@@ -81,89 +93,18 @@ def getGndStructures(EXPERIMENT_IDX,CYCLE):
 
     for sample in gnd_samples:
         partial_gnd_sample = - np.ones(LENGTH)
-        composition = np.zeros(DICT_SIZE)
 
         for s in range(LENGTH):
             for m in range(DICT_SIZE):
                 entry_name = f'q_{s}_{m}'
-                if entry_name in sample:
-                    if sample[entry_name] == 1:
-                        partial_gnd_sample[s] = m
-                        composition[m] += 1
+                if sample[entry_name] == 1:
+                    partial_gnd_sample[s] = m
 
         partial_gnd_samples.append(partial_gnd_sample)
-        compositions.append(composition)
+
     del gnd_energy, gnd_samples, sequences                              # Remove from memory unnecessary variables;
 
-    partial_gnd_samples = np.array(partial_gnd_samples)                 # Convert lists into np.arrays;
-    compositions = np.array(compositions)
-   
-    # --------------------------------------------------------------------------------------#
-    # COMPLETE GROUND-STATE SEQUENCES; 
-
-    # --------------------------------------------------------------------------------------#
-    # STEP 0:
-    #   Suppose the current sequence currently has composition (i.e. [#A, #B, #C]) [1, 1, 1] and
-    #   that the target composition is [5, 4, 4]. By doing the difference [3, 1, 2] - [1, 1, 1] 
-    #   = [2, 0, 1], we find that we need 2 monomers A, 0 monomers B, and 1 monomer C. 
-
-    # STEP 1:
-    #   We build an array (i.e. 'missing monomers array')'A A C'.
-
-    # STEP 2:
-    # Find all non-equivalent permutations of the 'missing monomers array' (i.e. 'A A C'):
-    # 'A A C', 'A C A', and 'C A A'.
-    
-    # STEP 3:
-    #   Then, if the partial sequence was A -1 -1 C -1 B (-1 stands for an ignote monomer), we 
-    #   will have the following completements:
-    #       1) A A A C C B,
-    #       2) A A C C A B,
-    #       3) A C A C A B.
-    # --------------------------------------------------------------------------------------#
-    
-    # STEP 0;
-    missing_compositions = (COMPOSITION - compositions).astype(int)     
-    missing_monomers = list()                                           # List of 'Missing monomers' arrays (one for each sequence);
-
-    # STEP 1;
-    for mc in missing_compositions:                                      
-        mm = - np.ones((sum(mc)))                                       # Allocate 'missing monomers' array;
-        idx = 0                                                         
-        for flavour,number in enumerate(mc):                            # Initialize 'missing monomers' array;
-            if number > 0:                                              
-                mm[idx : idx + number] = flavour * np.ones(number)
-            idx += number    
-        missing_monomers.append(mm)
-
-    # STEP 2;
-    comb_missing_monomers = {} 
-
-    for idx, mm in enumerate(missing_monomers):
-        name = f'sequence_{idx}'
-
-        comb_missing_monomers[name] = list()
-        all_permutations = permutations(mm,len(mm)) 
-        
-        for perm_idx, perm in enumerate(set(all_permutations)):    
-            comb_missing_monomers[name].append(perm) 
-
-    # STEP 3;
-    complete_gnd_samples = {}                                           
-    for sample_idx, sample in enumerate(partial_gnd_samples):
-        name = f'sequence_{sample_idx}'
-        complete_gnd_samples[name] = np.broadcast_to(sample,(len(comb_missing_monomers[name]),LENGTH)).copy()
-        for perm_idx, perm in enumerate(comb_missing_monomers[name]):
-            missing_monomer_idx = 0
-            for entry_idx,entry in enumerate(sample):
-                if entry == -1:
-                    complete_gnd_samples[name][perm_idx, entry_idx] = comb_missing_monomers[name][perm_idx][missing_monomer_idx]
-                    missing_monomer_idx += 1
-
-    sequences_list = list()
-    for s in complete_gnd_samples:
-        sequences_list.append(complete_gnd_samples[s])
-    sequences = np.concatenate(sequences_list,axis = 0)
+    sequences  = np.array(partial_gnd_samples)                 # Convert lists into np.arrays;
     
     # --------------------------------------------------------------------------------------#
     # REPRODUCE GROUND-STATE SUBSPACES (reflexion symmetry along N-simple paths)
