@@ -8,10 +8,10 @@
         "TARGET_STRUCTURE": 21,
         "PROBABILITY_THRESHOLD": 0.8,
         "MODE": "fast",
-        "MAX_CYCLES":7,
-        "QA_ON":0,
+        "MAX_CYCLES":5,
+        "QA_ON":1,
         "SA_ON":0,
-        "HQA_ON":1
+        "HQA_ON":0
     },
     {
         "NAME":"Small_lattice_2",

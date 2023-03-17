@@ -85,7 +85,7 @@ def getGndStructures(EXPERIMENT_IDX,CYCLE):
 
     sequences = pd.read_json(os.path.join(working_dir,fileName))
     gnd_energy = min(sequences['energy'])   
-    gnd_indexes = sequences[sequences['energy'] <= gnd_energy + ENERGY_GAP].index               # Exctract sequences returnd by Q.A. that have energy between gnd_energy 
+    gnd_indexes = sequences[sequences['energy'] == gnd_energy].index                            # Exctract sequences returnd by Q.A. that have energy between gnd_energy 
     gnd_samples = sequences['sample'][gnd_indexes]                                              # and gnd_energy + ENERGY_GAP (evaluated from current energy map);    
 
     partial_gnd_samples = list()

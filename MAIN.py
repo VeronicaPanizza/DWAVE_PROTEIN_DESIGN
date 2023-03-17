@@ -33,7 +33,7 @@ def MAIN():
         np.savetxt(filePath,eMap,fmt= '%.5f',delimiter=' ')
 
     fig = plt.figure()
-    for iteration in range(MAX_CYCLES):
+    for iteration in range(1):
         for EXPERIMENT_IDX in EXPERIMENT_IDXS:
             getGndSequences(EXPERIMENT_IDX,iteration)
             getGndStructures(EXPERIMENT_IDX,iteration)

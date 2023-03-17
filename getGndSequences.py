@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt 
 import json
+import dwave.inspector
 
 from dwave.system import EmbeddingComposite
 from dwave.system import DWaveSampler
@@ -32,8 +33,8 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
     QA_ON = bool(data["QA_ON"])                     # Quantum Annealing;
     HQA_ON = bool(data["HQA_ON"])                   # Hybrid Quantum Annealing;
     
-    lambdaCons          = 5                         # Energy penality for putting two flavours in the same vertex;
-    lambdaComposition   = 5
+    lambdaCons          = 2.2                        # Energy penality for putting two flavours in the same vertex;
+    lambdaComposition   = 1.5
 
     # --------------------------------------------------------------------------------------#
     # CHOOSE PARAMETERS ASSOCIATED WITH ANNEALING PROCEDURES;
@@ -129,7 +130,8 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
         
         schedule = [[0,0],[ANNEALING_TIME,1]]
         
-        bqmSampleSet = sampler.sample(bqm, num_reads=N_SWEEPS_QA, anneal_schedule=schedule,label=f'{EXPERIMENT_NAME}_cycle_{CYCLE}_qa') 
+        bqmSampleSet = sampler.sample(bqm, num_reads=N_SWEEPS_QA, anneal_schedule=schedule,label=f'{EXPERIMENT_NAME}_cycle_{CYCLE}_qa',chain_strength=10) 
+        dwave.inspector.show(bqmSampleSet)
         bqmSampleSet = bqmSampleSet.aggregate()
     
         sampleSet_df = bqmSampleSet.to_pandas_dataframe(sample_column=True)  
@@ -144,7 +146,7 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
         print('Hybrid quantum annealing\n')
         for n in range(N_SWEEPS_HQA):
             sampler = LeapHybridSampler()
-            sampleSet = sampler.sample(bqm,label=f'{EXPERIMENT_NAME}_cycle_{CYCLE}_hqa')
+            sampleSet = sampler.sample(bqm,label=f'{EXPERIMENT_NAME}_cycle_{CYCLE}_hqa',time_limit = 3)
             sampleSet_df = sampleSet.to_pandas_dataframe(sample_column=True) 
             
             file_json = os.path.join(cycle_folder,'hqa.json')
