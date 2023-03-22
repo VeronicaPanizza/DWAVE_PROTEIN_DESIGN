@@ -1,6 +1,10 @@
 import os
 import random
 import numpy as np
+import json
+from matplotlib import pyplot as plt
+import pandas as pd
+from IPython.display import display
 
 # --------------------------------------------------------------------------------------#
 
@@ -81,3 +85,171 @@ def n_vector(sequence,contactMaps,DICT_SIZE):
     vector = np.reshape(vector,([np.shape(vector)[0],np.shape(vector)[1],-1]))  
 
     return vector
+
+# --------------------------------------------------------------------------------------#
+    
+def get_qubo(EXPERIMENT_IDX,CYCLE):
+
+    with open('experiment.json','r') as channel:
+        full_data = json.load(channel)
+    data = full_data[EXPERIMENT_IDX]
+
+    name = str(data['NAME'])
+    Nx   = int(data['N_X'])
+    Ny   = int(data['N_Y'])
+    D    = int(data['DICT_SIZE'])
+    comp = data['COMPOSITION'][:-1]
+    targ = int(data['TARGET_STRUCTURE'])
+
+    d = Nx*Ny * (D-1)
+
+    # Check;
+    # print('Target structure:',targ)
+    # print('Composition:', comp)
+    # print(f'Nx: {Nx} , Ny: {Ny}')
+    # print('Experiment name:',name)
+
+    # Load contact map of target
+    c_map = np.loadtxt(f'DATA/X_{Nx}_Y_{Ny}/contact_map_{targ}.txt')
+
+    # Load energy map of system
+    e_map_path = os.path.join(name,f'cycle_{CYCLE}',f'dict_size_{D}.txt') 
+    e_map = np.loadtxt(e_map_path,delimiter = ' ')
+
+    def pos_q(i,m):
+        return i * (D-1) + m 
+
+    def q(vec,i,m):
+        p_q = pos_q(i,m)
+        return vec[p_q]
+
+
+    l_exclud = 2
+    l_compos = 2
+
+    Q_energy = np.zeros((d,d),dtype='float')
+    offset_energy = 0
+
+    for i in range(Nx*Ny):
+        for j in range(i+1,Nx*Ny):
+            
+            if np.around(c_map[i,j],4) != 0:
+                
+                offset_energy += e_map[D-1,D-1] * c_map[i,j]
+                
+                for m in range(D-1):
+                    pos_qim = pos_q(i,m)
+                    pos_qjm = pos_q(j,m)
+                    
+                    E = e_map[D-1,m] - e_map[D-1,D-1] 
+                    
+                    Q_energy[pos_qim,pos_qim] += E *c_map[i,j]
+                    Q_energy[pos_qjm,pos_qjm] += E *c_map[i,j]
+                    
+                    for n in range(D-1):
+                        pos_qjn = pos_q(j,n)
+
+                        E = e_map[m,n]- e_map[D-1,n] - e_map[D-1,m] + e_map[D-1,D-1]
+                        Q_energy[pos_qim,pos_qjn] += E * c_map[i,j]
+
+
+    Q_exclud = np.zeros((d,d),dtype='float')
+    for i in range(Nx*Ny):
+        for m in range(D-1):
+            for n in range(m+1, D-1):
+                pos_qim = pos_q(i,m)
+                pos_qin = pos_q(i,n)
+                
+                Q_exclud[pos_qim,pos_qin] += 1
+
+
+    Q_compos = np.zeros((d,d),dtype='float')
+    offset_compos = 0
+
+    for m in range(D-1):
+        offset_compos += comp[m]**2
+        
+        for i in range(Nx*Ny):
+                pos_qim = pos_q(i,m)
+                Q_compos[pos_qim,pos_qim] -= 2*comp[m] - 1
+
+                for j in range(i+1,Nx*Ny):
+                    pos_qjm = pos_q(j,m)
+                    Q_compos[pos_qim,pos_qjm] += 2
+
+
+    Q_energy = (Q_energy + Q_energy.transpose()) / 2
+    Q_exclud = (Q_exclud + Q_exclud.transpose()) / 2
+    Q_comops = (Q_compos + Q_compos.transpose()) / 2
+
+    Q = Q_energy + l_exclud * Q_exclud + l_compos * Q_compos
+    offset = offset_energy + l_compos * offset_compos
+
+    np.savetxt('Q.txt',Q,delimiter = ' ')
+
+# --------------------------------------------------------------------------------------#
+
+def get_drawing(EXPERIMENT_IDX,CYCLE):
+    EXPERIMENT_IDX = 0
+    CYCLE = 0
+
+    with open('experiment.json','r') as channel:
+        full_data = json.load(channel)
+    data = full_data[EXPERIMENT_IDX]
+
+    name = str(data['NAME'])
+    targ = int(data['TARGET_STRUCTURE'])
+    Nx   = int(data['N_X'])
+    Ny   = int(data['N_Y'])
+    comp = np.array(data['COMPOSITION'])
+    D    = int(data['DICT_SIZE'])
+
+    colors = ['red','blue','yellow','green','magenta']
+    colors = colors[: D]
+
+    def pos_q(i,m):
+        return i * (D-1) + m
+
+    def q(vec,i,m):
+        return vec[pos_q(i,m)]
+
+    def get_colors(vec):
+        out_colors = []
+
+        for i in range(Nx*Ny):
+
+            color_on = False
+            for m in range(D-1):
+                if q(vec,i,m) == 1 and not color_on:
+                    color_on = True
+                    out_colors.append(colors[m])
+                elif q(vec,i,m) == 1 and color_on:
+                    raise Exception('Excluded volume condition violated')
+
+            if not color_on:
+                out_colors.append(colors[D-1])
+        return out_colors
+
+    # Load data
+    file_path = os.path.join(name,f'cycle_{CYCLE}','qa.json')
+    df = pd.read_json(file_path)
+    display(df)
+
+    for n in range(1):
+        state  = list(df['sample'][n].values())
+        state = np.array(state)
+        energy = df['energy'][n]
+
+        # Decode colors;
+        colors = get_colors(state)
+        print(f'Energy: {energy}')
+
+        x = [0, 0, 1, 2, 3, 3, 2, 1, 1, 0, 0, 1, 2, 2, 3, 3]
+        y = [2, 3, 3, 3, 3, 2, 2, 2, 1, 1, 0, 0, 0, 1, 1, 0]
+
+        figure = plt.figure(figsize=(4,4))
+        plt.grid()
+        struct = plt.plot(y,x,color ='k')
+        for color, xp,yp in list(zip(colors,x,y)):
+            plt.plot(yp,xp,linestyle='',marker = 'o',markerfacecolor=color,color=color)
+        figure.savefig(f'conf_{n}')
