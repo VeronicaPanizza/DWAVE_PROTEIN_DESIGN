@@ -88,7 +88,7 @@ def n_vector(sequence,contactMaps,DICT_SIZE):
 
 # --------------------------------------------------------------------------------------#
     
-def get_qubo(EXPERIMENT_IDX,CYCLE):
+def get_qubo(EXPERIMENT_IDX,CYCLE,AVG_ON=False):
 
     with open('experiment.json','r') as channel:
         full_data = json.load(channel)
@@ -103,14 +103,14 @@ def get_qubo(EXPERIMENT_IDX,CYCLE):
 
     d = Nx*Ny * (D-1)
 
-    # Check;
-    # print('Target structure:',targ)
-    # print('Composition:', comp)
-    # print(f'Nx: {Nx} , Ny: {Ny}')
-    # print('Experiment name:',name)
-
     # Load contact map of target
     c_map = np.loadtxt(f'DATA/X_{Nx}_Y_{Ny}/contact_map_{targ}.txt')
+
+    # Load average contact map of Nx x Ny lattice;
+    avg_contact_map = np.zeros((Nx*Ny,Nx*Ny))
+    if AVG_ON:
+        avg_contact_map = np.loadtxt(f'DATA/X_{Nx}_Y_{Ny}/avg_contact_map.txt')
+    c_map = c_map - avg_contact_map
 
     # Load energy map of system
     e_map_path = os.path.join(name,f'cycle_{CYCLE}',f'dict_size_{D}.txt') 
@@ -122,7 +122,6 @@ def get_qubo(EXPERIMENT_IDX,CYCLE):
     def q(vec,i,m):
         p_q = pos_q(i,m)
         return vec[p_q]
-
 
     l_exclud = 2
     l_compos = 2
