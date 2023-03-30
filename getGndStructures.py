@@ -69,7 +69,7 @@ def getGndStructures(EXPERIMENT_IDX,CYCLE):
     eMapCurr = np.reshape(eMapCurr,(DICT_SIZE**2))
 
     # Evaluate energy gap;
-    ENERGY_GAP = TEMPERATURE * (N_X - 1) * (N_Y - 1) * (np.max(eMapCurr) - np.min(eMapCurr))
+    # ENERGY_GAP = TEMPERATURE * (N_X - 1) * (N_Y - 1) * (np.max(eMapCurr) - np.min(eMapCurr))
     
     # --------------------------------------------------------------------------------------#
     # LOAD PARTIAL GROUND-STATE SEQUENCES;
@@ -92,13 +92,23 @@ def getGndStructures(EXPERIMENT_IDX,CYCLE):
     compositions = list()
 
     for sample in gnd_samples:
-        partial_gnd_sample = - np.ones(LENGTH)
+        sample = list(sample.values())
+        partial_gnd_sample = []
 
+        # Adapt to new encoding;
         for s in range(LENGTH):
-            for m in range(DICT_SIZE):
-                entry_name = f'q_{s}_{m}'
-                if sample[entry_name] == 1:
-                    partial_gnd_sample[s] = m
+            color_on = False
+
+            for m in range(DICT_SIZE-1):
+                q_pos = s * (DICT_SIZE-1) + m
+                q = sample[q_pos]
+                if q == 1 and not color_on:
+                    color_on = True
+                    partial_gnd_sample.append(m)
+                elif q==1 and color_on:
+                    raise Exception('Excluded volume constraint violated')
+            if not color_on:
+                partial_gnd_sample.append(DICT_SIZE-1)
 
         partial_gnd_samples.append(partial_gnd_sample)
 
@@ -152,7 +162,7 @@ def getGndStructures(EXPERIMENT_IDX,CYCLE):
     
     folder = os.path.join('DATA/',f'X_{N_X}_Y_{N_Y}/')
     dir_content = os.listdir(folder)
-    dir_content_filtered = [dir_content[x] for x in range(len(dir_content)) if 'contact_map' in dir_content[x]]
+    dir_content_filtered = [dir_content[x] for x in range(len(dir_content)) if 'contact_map' in dir_content[x] and 'avg' not in dir_content[x]]
     
     N_STRUCTURES = len(dir_content_filtered)
     
@@ -218,7 +228,5 @@ def getGndStructures(EXPERIMENT_IDX,CYCLE):
     des_dataframe = des_dataframe.sort_values('energy',ignore_index = True)
     outputFilePath = os.path.join(working_dir,'complete_' + fileName)
     des_dataframe.to_json(outputFilePath,indent = 2)
-
-
 
 

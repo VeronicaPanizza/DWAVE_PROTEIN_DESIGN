@@ -8,8 +8,7 @@ from getGndStructures import getGndStructures
 from getCorrectedEnergyMap import getCorrectedEnergyMap
 from matplotlib import pyplot as plt 
 
-def MAIN():
-    EXPERIMENT_IDXS = [0]
+def MAIN(EXPERIMENT_IDXS):
 
     full_data = pd.read_json('experiment.json')
     DICT_SIZE = full_data['DICT_SIZE'][EXPERIMENT_IDXS[0]]
@@ -33,7 +32,7 @@ def MAIN():
         np.savetxt(filePath,eMap,fmt= '%.5f',delimiter=' ')
 
     fig = plt.figure()
-    for iteration in range(1):
+    for iteration in range(MAX_CYCLES):
         for EXPERIMENT_IDX in EXPERIMENT_IDXS:
             getGndSequences(EXPERIMENT_IDX,iteration)
             getGndStructures(EXPERIMENT_IDX,iteration)

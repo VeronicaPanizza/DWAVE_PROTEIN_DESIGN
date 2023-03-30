@@ -88,7 +88,7 @@ def n_vector(sequence,contactMaps,DICT_SIZE):
 
 # --------------------------------------------------------------------------------------#
     
-def get_qubo(EXPERIMENT_IDX,CYCLE,AVG_ON=False):
+def get_qubo(EXPERIMENT_IDX,CYCLE,AVG_ON = False):
 
     with open('experiment.json','r') as channel:
         full_data = json.load(channel)

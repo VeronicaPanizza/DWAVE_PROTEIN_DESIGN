@@ -6,8 +6,8 @@ import json
 from IPython.display import display
 
 
-N_RUNS          = 5
-EXPERIMENT_IDX  = 0
+N_RUNS          = 4
+EXPERIMENT_IDX  = 4
 
 with open('experiment.json', 'r') as f:      
     full_data = json.load(f)
@@ -28,8 +28,6 @@ BETA = DICT_SIZE
 # REMOVE PRE-EXISTENT FILES;
 if os.path.isfile('deeperAnalysis.json'):
     os.remove('deeperAnalysis.json')
-
-
 
 data_out                                = {}
 data_out['Run']                         = []

@@ -70,7 +70,7 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
     # --------------------------------------------------------------------------------------#
     # SETUP OPTIMIZATION PROBLEM;
     
-    get_qubo(EXPERIMENT_IDX, CYCLE)
+    get_qubo(EXPERIMENT_IDX,CYCLE,AVG_ON=False)
     Q = np.loadtxt('Q.txt')
     bqm = dimod.BQM.from_qubo(Q)
 
@@ -94,12 +94,19 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
    
     # --------------------------------------------------------------------------------------#
     # HQA
+ 
 
     if HQA_ON:
+        qpu_time = []
+        run_time = []
+        
         print('Hybrid quantum annealing\n')
         for n in range(N_SWEEPS_HQA):
             sampler = LeapHybridSampler()
             sampleSet = sampler.sample(bqm,label=f'{EXPERIMENT_NAME}_cycle_{CYCLE}_hqa',time_limit = 3)
+            qpu_time.append(sampleSet.info['qpu_access_time'])
+            run_time.append(sampleSet.info['run_time'])
+
             sampleSet_df = sampleSet.to_pandas_dataframe(sample_column=True) 
             
             file_json = os.path.join(cycle_folder,'hqa.json')
@@ -112,12 +119,14 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
                 df = sampleSet_df
             
             # Aggregate samples;
-            samples = dimod.as_samples(list(df["sample"]))                    
-            energies = np.array(df["energy"])
-            num_occurrences = np.array(df["num_occurrences"])
+            # samples = dimod.as_samples(list(df["sample"]))                    
+            # energies = np.array(df["energy"])
+            # num_occurrences = np.array(df["num_occurrences"])
 
-            df = dimod.SampleSet.from_samples(samples_like=samples,vartype='BINARY',energy=energies,num_occurrences=num_occurrences,aggregate_samples=True)
-            df = df.to_pandas_dataframe(sample_column = True)
+            # df = dimod.SampleSet.from_samples(samples_like=samples,vartype='BINARY',energy=energies,num_occurrences=num_occurrences,aggregate_samples=True)
+            # df = df.to_pandas_dataframe(sample_column = True)
             df.to_json(file_json, indent=2)
         
+        np.savetxt(f'{EXPERIMENT_NAME}/cycle_{CYCLE}/qpu_time.txt',qpu_time)
+        np.savetxt(f'{EXPERIMENT_NAME}/cycle_{CYCLE}/run_time.txt',run_time)
       
