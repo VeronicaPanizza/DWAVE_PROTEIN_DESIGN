@@ -14,12 +14,15 @@ from dwave.system import DWaveSampler
 from dwave.system import LeapHybridSampler
 
 
-def getGndSequences(EXPERIMENT_IDX,CYCLE):
+def getGndSequences(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
 
     # --------------------------------------------------------------------------------------#
     # LOAD CURRENT EXPERIMENT SETTINGS;
 
-    with open('experiment.json', 'r') as f:      
+    working_dir = os.path.join(f'heatmap_{HEATMAP}',f'run_{RUN}')
+    filePath = os.path.join(working_dir, 'experiment.json')
+    
+    with open(filePath, 'r') as f:      
         full_data = json.load(f)
     data = full_data[EXPERIMENT_IDX]
     
@@ -37,8 +40,6 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
     # --------------------------------------------------------------------------------------#
     # CHOOSE PARAMETERS ASSOCIATED WITH ANNEALING PROCEDURES;
 
-    N_SWEEPS_SA = int(500)                          # Simulated Annealing: number of annealing runs;
-    N_STEPS_SA = 1e5                                # Simulated Annealing: number of steps per run;
     N_SWEEPS_QA = int(1e2)                          # Quantum Annealing: number of annealing runs;
     ANNEALING_TIME = 200                            # Quantum Annealing: annealing time (from 10 to 2000);
     N_SWEEPS_HQA = 3                                # Hybrid Quantum Annealing: number of runs;
@@ -49,7 +50,7 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
     # --------------------------------------------------------------------------------------#
     # OUTPUT FOLDER
     
-    cycle_folder = os.path.join(EXPERIMENT_NAME,f'cycle_{CYCLE}') 
+    cycle_folder = os.path.join(working_dir,f'cycle_{CYCLE}') 
    
     # --------------------------------------------------------------------------------------#
     # Create or load energy map;
@@ -127,6 +128,6 @@ def getGndSequences(EXPERIMENT_IDX,CYCLE):
             # df = df.to_pandas_dataframe(sample_column = True)
             df.to_json(file_json, indent=2)
         
-        np.savetxt(f'{EXPERIMENT_NAME}/cycle_{CYCLE}/qpu_time.txt',qpu_time)
-        np.savetxt(f'{EXPERIMENT_NAME}/cycle_{CYCLE}/run_time.txt',run_time)
+        np.savetxt(f'{cycle_folder}/qpu_time.txt',qpu_time)
+        np.savetxt(f'{cycle_folder}/run_time.txt',run_time)
       

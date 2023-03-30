@@ -33,14 +33,13 @@ def getCorrectedEnergyMap(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
 
     
     data = full_data[EXPERIMENT_IDX]
-    
-    EXPERIMENT_NAME = data["NAME"]                                              # Experiment name: will be the output folder;
+                                                # Experiment name: will be the output folder;
     N_X                     = int(data["N_X"])                                  # Width of the lattice containing the Hamiltonian path;
     N_Y                     = int(data["N_Y"])                                  # Height of the lattice containing the Hamiltonian path;
     S_IND                   = int(data["TARGET_STRUCTURE"])                     # Index associated with the DESIGNABLE target structure;
     DICT_SIZE               = int(data["DICT_SIZE"])                            # Dictionary size;
     PROBABILITY_THRESHOLD   = data['PROBABILITY_THRESHOLD']
-    MODE                    = str(data['MODE'])
+    # gMODE                    = str(data['MODE'])
     MAX_CYCLES              = int(data['MAX_CYCLES'])
     
     BETA = DICT_SIZE
@@ -73,7 +72,7 @@ def getCorrectedEnergyMap(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     # --------------------------------------------------------------------------------------#
     # LOAD DATA CONCERNING GROUND-STATES;
     
-    fileName = 'sa.json'
+    fileName = 'hqa.json'
     
     start = max(CYCLE - memory,0)
     

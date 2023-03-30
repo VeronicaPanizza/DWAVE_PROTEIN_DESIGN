@@ -9,8 +9,8 @@
         "PROBABILITY_THRESHOLD": 0.8,
         "MODE": "slow",        
         "MAX_CYCLES":20,
-        "SA_ON":1,
-        "HQA_ON":0
+        "SA_ON":0,
+        "HQA_ON":1
     },
     {
         "NAME":"Small_lattice_2",
@@ -23,8 +23,8 @@
         "MODE": "slow",
         "MAX_CYCLES":20,
         "QA_ON":0,
-        "SA_ON":1,
-        "HQA_ON":0
+        "SA_ON":0,
+        "HQA_ON":1
     },
     {
         "NAME":"Intermediate_lattice_1",
@@ -37,8 +37,8 @@
         "MODE": "slow",
         "MAX_CYCLES":20,
         "QA_ON":0,
-        "SA_ON":1,
-        "HQA_ON":0
+        "SA_ON":0,
+        "HQA_ON":1
     },
     {
         "NAME":"Intermediate_lattice_2",
@@ -51,8 +51,8 @@
         "MODE": "slow",
         "MAX_CYCLES":20,
         "QA_ON":0,
-        "SA_ON":1,
-        "HQA_ON":0
+        "SA_ON":0,
+        "HQA_ON":1
     },
     {
         "NAME":"Large_lattice_1",
@@ -65,8 +65,8 @@
         "MODE": "slow",
         "MAX_CYCLES":20,
         "QA_ON":0,
-        "SA_ON":1,
-        "HQA_ON":0
+        "SA_ON":0,
+        "HQA_ON":1
     },
     
     {
@@ -80,8 +80,8 @@
         "MODE": "slow",
         "MAX_CYCLES": 10,
         "QA_ON":0,
-        "SA_ON":1,
-        "HQA_ON":0
+        "SA_ON":0,
+        "HQA_ON":1
     }
 ]
 

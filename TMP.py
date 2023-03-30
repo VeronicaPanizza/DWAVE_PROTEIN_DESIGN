@@ -1,14 +1,44 @@
 import os
 from MAIN import MAIN
 from getCorrectedEnergyMap import getCorrectedEnergyMap
-from functions import get_qubo
+import functions
+import numpy as np
+import pandas as pd
+import shutil
 
-EXPERIMENT_IDXS=[5]
+use_real_pot = False
 
-for run in range(4):
-    MAIN(EXPERIMENT_IDXS)
-    os.rename('ExtraLarge_lattice',f'ExtraLarge_lattice_run{run}')
-    os.rename('dist.png',f'matrix_convergence_run{run}.png')
-    os.rename('distAnalysis.json',f'distAnalysis_run{run}.json')
+EXPERIMENT_IDX = 5
+N_RUNS = 1
+
+full_data   = pd.read_json('experiment.json')
+DICT_SIZE   = full_data['DICT_SIZE'][EXPERIMENT_IDX]
+MAX_CYCLES  = full_data['MAX_CYCLES'][EXPERIMENT_IDX]
+heatmap = 0
+
+os.mkdir(f'heatmap_{heatmap}')
+
+for run in range(N_RUNS):  
+    if use_real_pot:
+        eMap = np.loadtxt(f'ENERGY_MAP/dict_size_{DICT_SIZE}.txt',delimiter = '\t')
+    else:
+        eMap = functions.get_eMap(DICT_SIZE)        
+            
+    working_dir = os.path.join(f'heatmap_{heatmap}',f'run_{run}')
+    os.mkdir(working_dir)
+    
+    filePath = os.path.join(working_dir, 'experiment.json')
+    shutil.copyfile('experiment.json', filePath)
+
+    for cycle in range(MAX_CYCLES + 1):
+                        
+        cycle_dir = os.path.join(working_dir,f'cycle_{cycle}')
+        os.mkdir(cycle_dir)
+        
+        if cycle == 0:
+            file_path = os.path.join(working_dir,'cycle_0', f'dict_size_{DICT_SIZE}.txt')
+            np.savetxt(file_path,eMap,fmt= '%.5f',delimiter=' ')
+        
+    MAIN(EXPERIMENT_IDX,heatmap,run)
 
 
