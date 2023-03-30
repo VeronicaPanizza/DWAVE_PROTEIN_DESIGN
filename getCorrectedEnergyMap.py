@@ -110,7 +110,7 @@ def getCorrectedEnergyMap(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
 
         reducedGndDataFrame = gndDataFrame[gndDataFrame.index.isin(df_idx)]                              
         reducedGndDataFrame = reducedGndDataFrame.sort_values('energy',ignore_index=True)
-        N_STRUCTURES = len(reducedGndDataFrame)
+        # N_STRUCTURES = len(reducedGndDataFrame)
 
 
         # First learning process: learningy by energy;
