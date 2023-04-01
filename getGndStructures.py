@@ -55,14 +55,14 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     eMap = np.reshape(eMap,(1,1,DICT_SIZE**2))
 
     # Load current energy map;
-    eMapCurr = np.loadtxt(os.path.join(working_dir,f'dict_size_{DICT_SIZE}.txt'))
-    eMapCurr = np.reshape(eMapCurr,(DICT_SIZE**2))
+    # eMapCurr = np.loadtxt(os.path.join(working_dir,f'dict_size_{DICT_SIZE}.txt'))
+    # eMapCurr = np.reshape(eMapCurr,(DICT_SIZE**2))
  
     
     # --------------------------------------------------------------------------------------#
     # LOAD ENUMERATED STRUCTURES;
     
-    folder = os.path.join('Structures/',f'X_{N_X}_Y_{N_Y}/')
+    folder = os.path.join('DATA/',f'X_{N_X}_Y_{N_Y}/')
     dir_content = os.listdir(folder)
     dir_content_filtered = [dir_content[x] for x in range(len(dir_content)) if 'contact_map' in dir_content[x] and 'avg' not in dir_content[x]]
     
@@ -75,9 +75,9 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
         filePath = os.path.join(folder,file_name)
         maps[file_idx,:,:] = np.loadtxt(filePath, delimiter = ' ')
             
-     # --------------------------------------------------------------------------------------#
-     # LOAD SEQUENCES;
-     
+    # --------------------------------------------------------------------------------------#
+    # LOAD PARTIAL GROUND-STATE SEQUENCES;
+
     file_path = os.path.join(working_dir,'hqa.json')
     data = pd.read_json(file_path)
     energy = np.array(data['energy'])
@@ -87,8 +87,25 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     
     del energy
     
-    sequences = np.array(data['sequence'].tolist()).astype(int)
-    
+    samples = [list(a.values()) for a in data['sample']]
+    samples = np.array(samples)
+
+    sequences = -np.ones((len(samples),N_X * N_Y))
+
+    for sample_id, sample in enumerate(samples):
+        for bead in range(N_X*N_Y):
+            color_on = False
+            for m_guess in range(DICT_SIZE-1):
+                q = (DICT_SIZE - 1) * bead + m_guess 
+                draw_m = sample[q]
+                if draw_m==1 and not color_on:
+                    color_on = True
+                    sequences[sample_id,bead] = m_guess
+                elif draw_m==1 and color_on:
+                    raise Exception('Excluded volume condition is violated')
+            if not color_on:
+                sequences[sample_id,bead] = DICT_SIZE-1
+
     # --------------------------------------------------------------------------------------#
     # EXTENSIVE EVALUATION OF ENERGY FUNCTIONAL;
     
@@ -125,19 +142,16 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
             gnd_data['sequence'].append(sequence[::-1])                               
             gnd_data['structure'].append(structure_idx)
 
-            target_n_vec = n_vec_direct[S_IND,sequence_idx]
-            target_energy = np.sum(eMapCurr * target_n_vec)
+            # target_n_vec = n_vec_direct[S_IND,sequence_idx]
+            # target_energy = np.sum(eMapCurr * target_n_vec)
 
-            des_data['sequence'].append(sequence)
-            des_data['n_vec'].append(target_n_vec)
-            des_data['energy'].append(target_energy)
+            # des_data['sequence'].append(sequence)
+            # des_data['n_vec'].append(target_n_vec)
+            # des_data['energy'].append(target_energy)
             
     gnd_dataframe = pd.DataFrame.from_dict(gnd_data)
     gnd_dataframe = gnd_dataframe.sort_values('energy',ignore_index = True)
     outputFilePath = os.path.join(working_dir,'gnd_structures_from_hqa.json')
     gnd_dataframe.to_json(outputFilePath, indent = 2)
-
-
-
 
 

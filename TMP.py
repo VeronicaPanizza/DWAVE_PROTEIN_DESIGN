@@ -7,7 +7,6 @@ import pandas as pd
 import shutil
 
 use_real_pot = False
-
 EXPERIMENT_IDX = 5
 N_RUNS = 1
 
@@ -15,10 +14,11 @@ full_data   = pd.read_json('experiment.json')
 DICT_SIZE   = full_data['DICT_SIZE'][EXPERIMENT_IDX]
 MAX_CYCLES  = full_data['MAX_CYCLES'][EXPERIMENT_IDX]
 heatmap = 0
-
+if os.path.isdir(f'heatmap_{heatmap}'):
+    shutil.rmtree(f'heatmap_{heatmap}')
 os.mkdir(f'heatmap_{heatmap}')
 
-for run in range(N_RUNS):  
+for run in range(3,3+N_RUNS):  
     if use_real_pot:
         eMap = np.loadtxt(f'ENERGY_MAP/dict_size_{DICT_SIZE}.txt',delimiter = '\t')
     else:

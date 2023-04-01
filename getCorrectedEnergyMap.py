@@ -65,7 +65,7 @@ def getCorrectedEnergyMap(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     eMap = np.loadtxt(os.path.join(working_dir,f'dict_size_{DICT_SIZE}.txt'))               # Load current energy map;
     eMap = np.reshape(eMap,(1,-1))   
     
-    target_cmap = np.loadtxt(os.path.join('Structures',f'X_{N_X}_Y_{N_Y}',f'contact_map_{S_IND}.txt'))          # Load target contact map;
+    target_cmap = np.loadtxt(os.path.join('DATA',f'X_{N_X}_Y_{N_Y}',f'contact_map_{S_IND}.txt'))          # Load target contact map;
     target_cmap = np.reshape(target_cmap,(1, N_X * N_Y, N_X * N_Y))
 
     

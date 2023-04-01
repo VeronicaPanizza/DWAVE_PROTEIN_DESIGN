@@ -88,13 +88,12 @@ def n_vector(sequence,contactMaps,DICT_SIZE):
 
 # --------------------------------------------------------------------------------------#
     
-def get_qubo(EXPERIMENT_IDX,CYCLE,AVG_ON = False):
+def get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON = False):
 
     with open('experiment.json','r') as channel:
         full_data = json.load(channel)
     data = full_data[EXPERIMENT_IDX]
 
-    name = str(data['NAME'])
     Nx   = int(data['N_X'])
     Ny   = int(data['N_Y'])
     D    = int(data['DICT_SIZE'])
@@ -113,7 +112,7 @@ def get_qubo(EXPERIMENT_IDX,CYCLE,AVG_ON = False):
     c_map = c_map - avg_contact_map
 
     # Load energy map of system
-    e_map_path = os.path.join(name,f'cycle_{CYCLE}',f'dict_size_{D}.txt') 
+    e_map_path = os.path.join(f'heatmap_{HEATMAP}',f'run_{RUN}',f'cycle_{CYCLE}',f'dict_size_{D}.txt') 
     e_map = np.loadtxt(e_map_path,delimiter = ' ')
 
     def pos_q(i,m):

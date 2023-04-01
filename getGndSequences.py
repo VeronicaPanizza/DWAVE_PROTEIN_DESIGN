@@ -71,7 +71,7 @@ def getGndSequences(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     # --------------------------------------------------------------------------------------#
     # SETUP OPTIMIZATION PROBLEM;
     
-    get_qubo(EXPERIMENT_IDX,CYCLE,AVG_ON=False)
+    get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON=False)
     Q = np.loadtxt('Q.txt')
     bqm = dimod.BQM.from_qubo(Q)
 
