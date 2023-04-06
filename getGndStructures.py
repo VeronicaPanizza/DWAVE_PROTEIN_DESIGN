@@ -62,7 +62,7 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     # --------------------------------------------------------------------------------------#
     # LOAD ENUMERATED STRUCTURES;
     
-    folder = os.path.join('Structures/',f'X_{N_X}_Y_{N_Y}/')
+    folder = os.path.join('DATA/',f'X_{N_X}_Y_{N_Y}/')
     dir_content = os.listdir(folder)
     dir_content_filtered = [dir_content[x] for x in range(len(dir_content)) if 'contact_map' in dir_content[x] and 'avg' not in dir_content[x]]
     
@@ -84,10 +84,26 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     
     thrEnergy = min(energy)
     data = data[data['energy'] == thrEnergy]
-    
-    del energy
-    
-    sequences = np.array(data['sequence'].tolist()).astype(int)
+    samples = list(data['sample'].values())
+    samples = list([ list(s.values()) for s in samples ])
+    sequences = np.zeros((len(samples),N_X*N_Y))
+
+    for sample_id,sample in enumerate(samples):
+        for bead_id in range(N_X * N_Y):
+            color_on = False
+            for color in range(DICT_SIZE-1):
+                q_pos = bead_id * (DICT_SIZE-1) + color
+
+                if sample[q_pos]==1 and color_on==False:
+                    color_on = True
+                    sequences[sample_id,bead_id] = color
+                elif sample[q_pos]==1 and color_on==True:
+                    raise Exception("Excluded volume condition violated.")
+            
+            if color_on == False:
+                sequences[sample_id,bead_id] = DICT_SIZE - 1
+            
+    sequences = sequences.astype(int)
     
     # --------------------------------------------------------------------------------------#
     # EXTENSIVE EVALUATION OF ENERGY FUNCTIONAL;

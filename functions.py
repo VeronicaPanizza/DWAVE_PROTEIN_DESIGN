@@ -115,98 +115,9 @@ def get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON = False):
     e_map_path = os.path.join(f'heatmap_{HEATMAP}',f'run_{RUN}',f'cycle_{CYCLE}',f'dict_size_{D}.txt') 
     e_map = np.loadtxt(e_map_path,delimiter = ' ')
 
-    def pos_q(i,m):
-        return i * (D-1) + m 
-
-    def q(vec,i,m):
-        p_q = pos_q(i,m)
-        return vec[p_q]
-
-    l_exclud = 36 #2
-    l_compos = 36 #2
-
-    Q_energy = np.zeros((d,d),dtype='float')
-    offset_energy = 0
-
-    for i in range(Nx*Ny):
-        for j in range(i+1,Nx*Ny):
-            
-            if np.around(c_map[i,j],4) != 0:
-                
-                offset_energy += e_map[D-1,D-1] * c_map[i,j]
-                
-                for m in range(D-1):
-                    pos_qim = pos_q(i,m)
-                    pos_qjm = pos_q(j,m)
-                    
-                    E = e_map[D-1,m] - e_map[D-1,D-1] 
-                    
-                    Q_energy[pos_qim,pos_qim] += E *c_map[i,j]
-                    Q_energy[pos_qjm,pos_qjm] += E *c_map[i,j]
-                    
-                    for n in range(D-1):
-                        pos_qjn = pos_q(j,n)
-
-                        E = e_map[m,n]- e_map[D-1,n] - e_map[D-1,m] + e_map[D-1,D-1]
-                        Q_energy[pos_qim,pos_qjn] += E * c_map[i,j]
-
-
-    Q_exclud = np.zeros((d,d),dtype='float')
-    for i in range(Nx*Ny):
-        for m in range(D-1):
-            for n in range(m+1, D-1):
-                pos_qim = pos_q(i,m)
-                pos_qin = pos_q(i,n)
-                
-                Q_exclud[pos_qim,pos_qin] += 1
-
-
-    Q_compos = np.zeros((d,d),dtype='float')
-    offset_compos = 0
-
-    for m in range(D-1):
-        offset_compos += comp[m]**2
-        
-        for i in range(Nx*Ny):
-                pos_qim = pos_q(i,m)
-                Q_compos[pos_qim,pos_qim] -= 2*comp[m] - 1
-
-                for j in range(i+1,Nx*Ny):
-                    pos_qjm = pos_q(j,m)
-                    Q_compos[pos_qim,pos_qjm] += 2
-
-
-    Q_energy = (Q_energy + Q_energy.transpose()) / 2
-    Q_exclud = (Q_exclud + Q_exclud.transpose()) / 2
-    Q_compos = (Q_compos + Q_compos.transpose()) / 2
-
-    Q = Q_energy + l_exclud * Q_exclud + l_compos * Q_compos
-    offset = offset_energy + l_compos * offset_compos
-
-    np.savetxt('Q.txt',Q,delimiter = ' ')
-
-def get_qubo_2(EXPERIMENT_IDX,e_map,AVG_ON = False):
-
-    with open('experiment.json','r') as channel:
-        full_data = json.load(channel)
-    data = full_data[EXPERIMENT_IDX]
-
-    Nx   = int(data['N_X'])
-    Ny   = int(data['N_Y'])
-    D    = int(data['DICT_SIZE'])
-    comp = data['COMPOSITION'][:-1]
-    targ = int(data['TARGET_STRUCTURE'])
-
-    d = Nx*Ny * (D-1)
-
-    # Load contact map of target
-    c_map = np.loadtxt(f'DATA/X_{Nx}_Y_{Ny}/contact_map_{targ}.txt')
-
-    # Load average contact map of Nx x Ny lattice;
-    avg_contact_map = np.zeros((Nx*Ny,Nx*Ny))
-    if AVG_ON:
-        avg_contact_map = np.loadtxt(f'DATA/X_{Nx}_Y_{Ny}/avg_contact_map.txt')
-    c_map = c_map - avg_contact_map
+    # Evaluate secure weights for penalties;
+    l_exclud = (Nx - 1) * (Ny - 1) * (np.max(e_map) - np.min(e_map)) / 2
+    l_compos = l_exclud
 
     def pos_q(i,m):
         return i * (D-1) + m 
@@ -214,9 +125,6 @@ def get_qubo_2(EXPERIMENT_IDX,e_map,AVG_ON = False):
     def q(vec,i,m):
         p_q = pos_q(i,m)
         return vec[p_q]
-
-    l_exclud = 2
-    l_compos = 2
 
     Q_energy = np.zeros((d,d),dtype='float')
     offset_energy = 0
@@ -277,7 +185,7 @@ def get_qubo_2(EXPERIMENT_IDX,e_map,AVG_ON = False):
     offset = offset_energy + l_compos * offset_compos
     print('Offset:',offset)
     np.savetxt('Q.txt',Q,delimiter = ' ')
-
+    np.savetxt('offset.txt',np.array([offset]))
 # --------------------------------------------------------------------------------------#
 
 def get_drawing(RUN,CYCLE):

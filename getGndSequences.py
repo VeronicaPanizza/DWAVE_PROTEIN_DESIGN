@@ -42,7 +42,7 @@ def getGndSequences(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
 
     N_SWEEPS_QA = int(1e2)                          # Quantum Annealing: number of annealing runs;
     ANNEALING_TIME = 200                            # Quantum Annealing: annealing time (from 10 to 2000);
-    N_SWEEPS_HQA = 3                                # Hybrid Quantum Annealing: number of runs;
+    N_SWEEPS_HQA = 1                                # Hybrid Quantum Annealing: number of runs;
 
     sep = '\n---------------------------------------------------------------------------------\n'
     print(sep,f'GET GROUND-STATE SEQUENCES FOR EXPERIMENT {EXPERIMENT_IDX}: \t {EXPERIMENT_NAME}',sep)
@@ -73,6 +73,7 @@ def getGndSequences(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     
     get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON=False)
     Q = np.loadtxt('Q.txt')
+    offset = np.loadtxt('offset.txt')
     bqm = dimod.BQM.from_qubo(Q)
 
     # --------------------------------------------------------------------------------------#
@@ -95,7 +96,6 @@ def getGndSequences(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
    
     # --------------------------------------------------------------------------------------#
     # HQA
- 
 
     if HQA_ON:
         qpu_time = []
@@ -109,7 +109,8 @@ def getGndSequences(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
             run_time.append(sampleSet.info['run_time'])
 
             sampleSet_df = sampleSet.to_pandas_dataframe(sample_column=True) 
-            
+            sampleSet_df['energy']  = sampleset_df['energy'] + offset
+
             file_json = os.path.join(cycle_folder,'hqa.json')
 
             if os.path.exists(file_json):
@@ -119,13 +120,6 @@ def getGndSequences(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
             else:
                 df = sampleSet_df
             
-            # Aggregate samples;
-            # samples = dimod.as_samples(list(df["sample"]))                    
-            # energies = np.array(df["energy"])
-            # num_occurrences = np.array(df["num_occurrences"])
-
-            # df = dimod.SampleSet.from_samples(samples_like=samples,vartype='BINARY',energy=energies,num_occurrences=num_occurrences,aggregate_samples=True)
-            # df = df.to_pandas_dataframe(sample_column = True)
             df.to_json(file_json, indent=2)
         
         np.savetxt(f'{cycle_folder}/qpu_time.txt',qpu_time)
