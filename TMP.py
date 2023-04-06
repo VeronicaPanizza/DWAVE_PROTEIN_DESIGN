@@ -9,6 +9,7 @@ import shutil
 use_real_pot = False
 EXPERIMENT_IDX = 5
 N_RUNS = 1
+SEED = 0
 
 full_data   = pd.read_json('experiment.json')
 DICT_SIZE   = full_data['DICT_SIZE'][EXPERIMENT_IDX]
@@ -18,11 +19,12 @@ if os.path.isdir(f'heatmap_{heatmap}'):
     shutil.rmtree(f'heatmap_{heatmap}')
 os.mkdir(f'heatmap_{heatmap}')
 
-for run in range(3,3+N_RUNS):  
+for run in range(SEED,SEED+N_RUNS):  
     if use_real_pot:
         eMap = np.loadtxt(f'ENERGY_MAP/dict_size_{DICT_SIZE}.txt',delimiter = '\t')
     else:
-        eMap = functions.get_eMap(DICT_SIZE)        
+        # eMap = functions.get_eMap(DICT_SIZE)
+        eMap = np.loadtxt(f'Start_emaps/dict_size_{DICT_SIZE}_{SEED}.txt')        
             
     working_dir = os.path.join(f'heatmap_{heatmap}',f'run_{run}')
     os.mkdir(working_dir)

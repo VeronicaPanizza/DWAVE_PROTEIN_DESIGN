@@ -3,11 +3,10 @@ import numpy as np
 from numpy import linalg
 import pandas as pd
 import json
-from IPython.display import display
 
 
-N_RUNS          = 4
-EXPERIMENT_IDX  = 4
+N_RUNS          = 1
+EXPERIMENT_IDX  = 5
 
 with open('experiment.json', 'r') as f:      
     full_data = json.load(f)
@@ -43,13 +42,13 @@ for RUN in range(N_RUNS):
     for CYCLE in range(MAX_CYCLES):
         print(f'\n RUN: {RUN} \t CYCLE:', CYCLE,'\n')
         
-        f_curr = os.path.join(f'{EXPERIMENT_NAME}_run{RUN}',f'cycle_{CYCLE}')
-        f_next = os.path.join(f'{EXPERIMENT_NAME}_run{RUN}', f'cycle_{CYCLE+1}')
+        f_curr = os.path.join(f'run_{RUN}',f'cycle_{CYCLE}')
+        f_next = os.path.join(f'run_{RUN}', f'cycle_{CYCLE+1}')
         
         fp = os.path.join(f_curr,f'dict_size_{DICT_SIZE}.txt')
         tmp_map = np.loadtxt(fp, delimiter=' ')
         
-        fp = os.path.join(f_curr,'gnd_structures_from_hqa.json')
+        fp = os.path.join(f_curr,'gnd_structures_from_sa.json')
         df = pd.read_json(fp)
         df = df.sort_values(['energy'],ignore_index = True)
         
@@ -96,7 +95,6 @@ for RUN in range(N_RUNS):
         data['Target_position']  = FIRST_POS
         
         data = pd.DataFrame(data)
-        display(data)
         
         foldable_percentage         = 0
         target_foldable_percentage  = 0        
