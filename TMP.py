@@ -43,4 +43,3 @@ for run in range(SEED,SEED+N_RUNS):
         
     MAIN(EXPERIMENT_IDX,heatmap,run)
 
-

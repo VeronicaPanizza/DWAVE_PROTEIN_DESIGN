@@ -42,7 +42,7 @@ def getGndSequences(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
 
     N_SWEEPS_QA = int(1e2)                          # Quantum Annealing: number of annealing runs;
     ANNEALING_TIME = 200                            # Quantum Annealing: annealing time (from 10 to 2000);
-    N_SWEEPS_HQA = 1                                # Hybrid Quantum Annealing: number of runs;
+    N_SWEEPS_HQA = 3                                # Hybrid Quantum Annealing: number of runs;
 
     sep = '\n---------------------------------------------------------------------------------\n'
     print(sep,f'GET GROUND-STATE SEQUENCES FOR EXPERIMENT {EXPERIMENT_IDX}: \t {EXPERIMENT_NAME}',sep)
@@ -109,7 +109,7 @@ def getGndSequences(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
             run_time.append(sampleSet.info['run_time'])
 
             sampleSet_df = sampleSet.to_pandas_dataframe(sample_column=True) 
-            sampleSet_df['energy']  = sampleset_df['energy'] + offset
+            sampleSet_df['energy']  = sampleSet_df['energy'] + offset
 
             file_json = os.path.join(cycle_folder,'hqa.json')
 

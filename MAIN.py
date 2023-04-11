@@ -26,3 +26,4 @@ def MAIN(EXPERIMENT_IDX,heatmap,run):
         getGndSequences(EXPERIMENT_IDX,heatmap,run,iteration)
         getGndStructures(EXPERIMENT_IDX,heatmap,run,iteration)
         getCorrectedEnergyMap(EXPERIMENT_IDX,heatmap,run,iteration)
+        functions.get_drawing(run,iteration)

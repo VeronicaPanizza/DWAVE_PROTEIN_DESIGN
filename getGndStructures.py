@@ -39,7 +39,7 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     S_IND                   = int(data['TARGET_STRUCTURE'])                     # Target structure (necessary to extract the N-simple paths);         
     DICT_SIZE               = int(data["DICT_SIZE"])                            # Dictionary size;
     PROBABILITY_THRESHOLD   = data['PROBABILITY_THRESHOLD']
-    
+    COMPOSITION             = np.array(data['COMPOSITION'])
     LENGTH                  = N_X * N_Y
 
     
@@ -57,7 +57,6 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     # Load current energy map;
     eMapCurr = np.loadtxt(os.path.join(working_dir,f'dict_size_{DICT_SIZE}.txt'))
     eMapCurr = np.reshape(eMapCurr,(DICT_SIZE**2))
- 
     
     # --------------------------------------------------------------------------------------#
     # LOAD ENUMERATED STRUCTURES;
@@ -78,33 +77,39 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
      # --------------------------------------------------------------------------------------#
      # LOAD SEQUENCES;
      
-    file_path = os.path.join(working_dir,'sa.json')
+    file_path = os.path.join(working_dir,'hqa.json')
     data = pd.read_json(file_path)
     energy = np.array(data['energy'])
     
-    thrEnergy = min(energy)
-    data = data[data['energy'] == thrEnergy]
-    samples = list(data['sample'].values())
+    # thrEnergy = min(energy)
+    # data = data[data['energy'] == thrEnergy]
+    samples = list(data['sample'].values)
     samples = list([ list(s.values()) for s in samples ])
     sequences = np.zeros((len(samples),N_X*N_Y))
 
     for sample_id,sample in enumerate(samples):
+        composition = np.zeros(DICT_SIZE)
         for bead_id in range(N_X * N_Y):
             color_on = False
             for color in range(DICT_SIZE-1):
                 q_pos = bead_id * (DICT_SIZE-1) + color
 
                 if sample[q_pos]==1 and color_on==False:
+                    composition[color] += 1
                     color_on = True
                     sequences[sample_id,bead_id] = color
                 elif sample[q_pos]==1 and color_on==True:
                     raise Exception("Excluded volume condition violated.")
             
             if color_on == False:
+                composition[DICT_SIZE-1] += 1
                 sequences[sample_id,bead_id] = DICT_SIZE - 1
+
+        if not (composition==COMPOSITION).all():
+            raise Exception('Composition constraint violated.') 
             
     sequences = sequences.astype(int)
-    
+
     # --------------------------------------------------------------------------------------#
     # EXTENSIVE EVALUATION OF ENERGY FUNCTIONAL;
     
@@ -120,26 +125,26 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     des_data['energy']      = []                                                    #   sequence, n_vector on target structure and its energy);
     
     n_vec_direct    = functions.n_vector(sequences,maps,DICT_SIZE)                  # Direct housing;
-    # n_vec_inverse   = functions.n_vector(sequences[:,::-1],maps,DICT_SIZE)          # Inverse housing; 
+    n_vec_inverse   = functions.n_vector(sequences[:,::-1],maps,DICT_SIZE)          # Inverse housing; 
 
     energy_direct   = np.sum(n_vec_direct * eMap, axis = 2)                         # Evaluate energy for direct housing of sequences;
-    # energy_inverse  = np.sum(n_vec_inverse * eMap,axis = 2)                         # Evaluate energy for inverse housing of sequences;
+    energy_inverse  = np.sum(n_vec_inverse * eMap,axis = 2)                         # Evaluate energy for inverse housing of sequences;
 
 
     for sequence_idx, sequence in enumerate(sequences):
         for structure_idx in range(N_STRUCTURES):
             eDirect  = energy_direct[structure_idx,sequence_idx] 
-            # eInverse = energy_inverse[structure_idx,sequence_idx]
+            eInverse = energy_inverse[structure_idx,sequence_idx]
 
             gnd_data['energy'].append(eDirect)
             gnd_data['n_vec'].append(n_vec_direct[structure_idx,sequence_idx])
             gnd_data['sequence'].append(sequence)
             gnd_data['structure'].append(structure_idx)
         
-            # gnd_data['energy'].append(eInverse)
-            # gnd_data['n_vec'].append(n_vec_inverse[structure_idx,sequence_idx])
-            # gnd_data['sequence'].append(sequence[::-1])                               
-            # gnd_data['structure'].append(structure_idx)
+            gnd_data['energy'].append(eInverse)
+            gnd_data['n_vec'].append(n_vec_inverse[structure_idx,sequence_idx])
+            gnd_data['sequence'].append(sequence[::-1])                               
+            gnd_data['structure'].append(structure_idx)
 
             target_n_vec = n_vec_direct[S_IND,sequence_idx]
             target_energy = np.sum(eMapCurr * target_n_vec)
@@ -150,10 +155,8 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
             
     gnd_dataframe = pd.DataFrame.from_dict(gnd_data)
     gnd_dataframe = gnd_dataframe.sort_values('energy',ignore_index = True)
-    outputFilePath = os.path.join(working_dir,'gnd_structures_from_sa.json')
+    outputFilePath = os.path.join(working_dir,'gnd_structures_from_hqa.json')
     gnd_dataframe.to_json(outputFilePath, indent = 2)
-
-
 
 
 

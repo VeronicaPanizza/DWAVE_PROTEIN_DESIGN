@@ -116,8 +116,11 @@ def get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON = False):
     e_map = np.loadtxt(e_map_path,delimiter = ' ')
 
     # Evaluate secure weights for penalties;
-    l_exclud = (Nx - 1) * (Ny - 1) * (np.max(e_map) - np.min(e_map)) / 2
-    l_compos = l_exclud
+    # l_compos = (Nx - 1) * (Ny - 1) * (np.max(e_map) - np.min(e_map)) / 6
+    # l_exclud = l_compos
+
+    l_compos = 4
+    l_exclud = 4
 
     def pos_q(i,m):
         return i * (D-1) + m 
@@ -139,11 +142,11 @@ def get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON = False):
                 for m in range(D-1):
                     pos_qim = pos_q(i,m)
                     pos_qjm = pos_q(j,m)
-                    
+
                     E = e_map[D-1,m] - e_map[D-1,D-1] 
                     
-                    Q_energy[pos_qim,pos_qim] += E *c_map[i,j]
-                    Q_energy[pos_qjm,pos_qjm] += E *c_map[i,j]
+                    Q_energy[pos_qim,pos_qim] += E * c_map[i,j]
+                    Q_energy[pos_qjm,pos_qjm] += E * c_map[i,j]
                     
                     for n in range(D-1):
                         pos_qjn = pos_q(j,n)
@@ -160,7 +163,6 @@ def get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON = False):
                 pos_qin = pos_q(i,n)
                 
                 Q_exclud[pos_qim,pos_qin] += 1
-
 
     Q_compos = np.zeros((d,d),dtype='float')
     offset_compos = 0
@@ -233,7 +235,7 @@ def get_drawing(RUN,CYCLE):
     df = pd.read_json(file_path)
     display(df)
 
-    for n in range(3):
+    for n in range(1):
         state  = list(df['sample'][n].values())
         state = np.array(state)
         energy = df['energy'][n]
@@ -252,6 +254,4 @@ def get_drawing(RUN,CYCLE):
         struct = plt.plot(y,x,color ='k')
         for color, xp,yp in list(zip(colors,x,y)):
             plt.plot(yp,xp,linestyle='',marker = 'o',markerfacecolor=color,color=color)
-        figure.savefig(f'conf_{n}')
-
-get_drawing(0,5)
+        figure.savefig(f'conf_run_{RUN}_cycle_{CYCLE}_seq{n}')

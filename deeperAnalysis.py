@@ -42,13 +42,13 @@ for RUN in range(N_RUNS):
     for CYCLE in range(MAX_CYCLES):
         print(f'\n RUN: {RUN} \t CYCLE:', CYCLE,'\n')
         
-        f_curr = os.path.join(f'run_{RUN}',f'cycle_{CYCLE}')
-        f_next = os.path.join(f'run_{RUN}', f'cycle_{CYCLE+1}')
+        f_curr = os.path.join('heatmap_0',f'run_{RUN}',f'cycle_{CYCLE}')
+        f_next = os.path.join('heatmap_0',f'run_{RUN}', f'cycle_{CYCLE+1}')
         
         fp = os.path.join(f_curr,f'dict_size_{DICT_SIZE}.txt')
         tmp_map = np.loadtxt(fp, delimiter=' ')
         
-        fp = os.path.join(f_curr,'gnd_structures_from_sa.json')
+        fp = os.path.join(f_curr,'gnd_structures_from_hqa.json')
         df = pd.read_json(fp)
         df = df.sort_values(['energy'],ignore_index = True)
         
