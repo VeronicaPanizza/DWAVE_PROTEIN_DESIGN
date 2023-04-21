@@ -119,8 +119,8 @@ def get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON = False):
     # l_compos = (Nx - 1) * (Ny - 1) * (np.max(e_map) - np.min(e_map)) / 6
     # l_exclud = l_compos
 
-    l_compos = 4
-    l_exclud = 4
+    l_compos = 2.2
+    l_exclud = 2.2
 
     def pos_q(i,m):
         return i * (D-1) + m 
@@ -185,9 +185,54 @@ def get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON = False):
 
     Q = Q_energy + l_exclud * Q_exclud + l_compos * Q_compos
     offset = offset_energy + l_compos * offset_compos
-    print('Offset:',offset)
-    np.savetxt('Q.txt',Q,delimiter = ' ')
+    print(' Offset:',offset)
+    print('\n Portion of Q:',Q[:4,:4],"\n")
+
+    np.savetxt('Q.txt',Q)
     np.savetxt('offset.txt',np.array([offset]))
+
+# --------------------------------------------------------------------------------------#
+def validate(EXPERIMENT_IDX, state):
+    state = state[0]
+    with open('experiment.json','r') as channel:
+        full_data = json.load(channel)
+    data = full_data[EXPERIMENT_IDX]
+
+    COMPOSITION = np.array(data['COMPOSITION'])
+    D           = int(data['DICT_SIZE'])
+    Nx          = int(data['N_X'])
+    Ny          = int(data['N_Y'])
+
+    composition = np.zeros_like(COMPOSITION)
+    
+    violation_excluded_volume           = False
+    violation_composition_constraint    = False
+
+    for bead in range(Nx * Ny):
+        color_on = False
+
+        for m in range(D-1):
+            pos = bead * (D-1) + m
+            if state[pos]==1 and color_on==False:
+                color_on =True
+                composition[m] += 1
+            elif state[pos]==1 and color_on==True:
+                violation_excluded_volume = True
+                break
+        if color_on == False:
+            composition[D-1] += 1 
+        
+    if not (composition==COMPOSITION).all():
+        violation_composition_constraint = True
+    
+    if violation_composition_constraint or violation_excluded_volume:
+        print(f'Sequence \n {state} \n violates constraints.\n')
+        return False
+    else:
+        print(f'Sequence \n {state} \n has been validated.\n')
+        return True
+
+    
 # --------------------------------------------------------------------------------------#
 
 def get_drawing(RUN,CYCLE):
@@ -197,7 +242,7 @@ def get_drawing(RUN,CYCLE):
         full_data = json.load(channel)
     data = full_data[EXPERIMENT_IDX]
 
-    name = f'heatmap_{RUN}/run_{RUN}'
+    name = f'heatmap_{0}/run_{RUN}'
     targ = int(data['TARGET_STRUCTURE'])
     Nx   = int(data['N_X'])
     Ny   = int(data['N_Y'])

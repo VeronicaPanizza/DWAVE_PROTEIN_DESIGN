@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 import json
 import dwave.inspector
-from functions import  get_qubo
+from functions import  get_qubo, validate
 
 from dwave.system import EmbeddingComposite
 from dwave.system import DWaveSampler
@@ -71,7 +71,7 @@ def getGndSequences(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     # --------------------------------------------------------------------------------------#
     # SETUP OPTIMIZATION PROBLEM;
     
-    get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON=False)
+    get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON=True)
     Q = np.loadtxt('Q.txt')
     offset = np.loadtxt('offset.txt')
     bqm = dimod.BQM.from_qubo(Q)
@@ -109,18 +109,24 @@ def getGndSequences(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
             run_time.append(sampleSet.info['run_time'])
 
             sampleSet_df = sampleSet.to_pandas_dataframe(sample_column=True) 
-            sampleSet_df['energy']  = sampleSet_df['energy'] + offset
-
-            file_json = os.path.join(cycle_folder,'hqa.json')
-
-            if os.path.exists(file_json):
-                df = pd.read_json(file_json)
-                df = pd.concat([df,sampleSet_df],ignore_index=True)
-                df = df.sort_values('energy',axis=0,ascending=True)
-            else:
-                df = sampleSet_df
             
-            df.to_json(file_json, indent=2)
+            state = [list(s.values()) for s in sampleSet_df['sample'].values]                            # Extract sample;
+            save_state = validate(EXPERIMENT_IDX, state)                                        # Validate sample;
+
+            if save_state:
+                state = np.array(state)
+                sampleSet_df['energy']  = state @ Q @ state.transpose() + offset                # Evaluate again energy using Q and offset;   
+
+                file_json = os.path.join(cycle_folder,'hqa.json')
+
+                if os.path.exists(file_json):
+                    df = pd.read_json(file_json)
+                    df = pd.concat([df,sampleSet_df],ignore_index=True)
+                    df = df.sort_values('energy',axis=0,ascending=True)
+                else:
+                    df = sampleSet_df
+                
+                df.to_json(file_json, indent=2)
         
         np.savetxt(f'{cycle_folder}/qpu_time.txt',qpu_time)
         np.savetxt(f'{cycle_folder}/run_time.txt',run_time)

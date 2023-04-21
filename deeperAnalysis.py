@@ -4,7 +4,7 @@ from numpy import linalg
 import pandas as pd
 import json
 
-
+SEED            = 2
 N_RUNS          = 1
 EXPERIMENT_IDX  = 5
 
@@ -37,8 +37,8 @@ data_out['Distance']                    = []
 
 
 # LOADING RESULTS OF FOLDING PROCESS;
-for RUN in range(N_RUNS):
-        
+for RUN in range(SEED,N_RUNS+SEED):
+    MAX_CYCLES=5    
     for CYCLE in range(MAX_CYCLES):
         print(f'\n RUN: {RUN} \t CYCLE:', CYCLE,'\n')
         
@@ -53,7 +53,7 @@ for RUN in range(N_RUNS):
         df = df.sort_values(['energy'],ignore_index = True)
         
         n_structures = max(df['structure']) + 1 
-        n_sequences = len(df) / n_structures
+        n_sequences = 0
         
         sequences = np.vstack(df['sequence'])                                         
         r_sequences, r_idxs = np.unique(sequences, axis = 0, return_inverse=True)       

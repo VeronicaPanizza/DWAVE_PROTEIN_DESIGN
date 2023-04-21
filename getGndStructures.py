@@ -81,8 +81,8 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     data = pd.read_json(file_path)
     energy = np.array(data['energy'])
     
-    # thrEnergy = min(energy)
-    # data = data[data['energy'] == thrEnergy]
+    thrEnergy = min(energy)
+    data = data[data['energy'] <= thrEnergy + 0.5] 
     samples = list(data['sample'].values)
     samples = list([ list(s.values()) for s in samples ])
     sequences = np.zeros((len(samples),N_X*N_Y))
@@ -118,12 +118,8 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     gnd_data['n_vec']       = []
     gnd_data['sequence']    = []
     gnd_data['structure']   = []
+    gnd_data['verse']       = []
 
-    des_data                = {}                                                    # Build output as a dictionary:
-    des_data['sequence']    = []                                                    #   This will contain complete information about
-    des_data['n_vec']       = []                                                    #   the outcome of the 'designing' procedure (complete 
-    des_data['energy']      = []                                                    #   sequence, n_vector on target structure and its energy);
-    
     n_vec_direct    = functions.n_vector(sequences,maps,DICT_SIZE)                  # Direct housing;
     n_vec_inverse   = functions.n_vector(sequences[:,::-1],maps,DICT_SIZE)          # Inverse housing; 
 
@@ -140,23 +136,17 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
             gnd_data['n_vec'].append(n_vec_direct[structure_idx,sequence_idx])
             gnd_data['sequence'].append(sequence)
             gnd_data['structure'].append(structure_idx)
-        
+            gnd_data['verse'].append('Direct')
+
             gnd_data['energy'].append(eInverse)
             gnd_data['n_vec'].append(n_vec_inverse[structure_idx,sequence_idx])
-            gnd_data['sequence'].append(sequence[::-1])                               
+            gnd_data['sequence'].append(sequence)                               
             gnd_data['structure'].append(structure_idx)
+            gnd_data['verse'].append('Inverse')
 
-            target_n_vec = n_vec_direct[S_IND,sequence_idx]
-            target_energy = np.sum(eMapCurr * target_n_vec)
 
-            des_data['sequence'].append(sequence)
-            des_data['n_vec'].append(target_n_vec)
-            des_data['energy'].append(target_energy)
-            
     gnd_dataframe = pd.DataFrame.from_dict(gnd_data)
     gnd_dataframe = gnd_dataframe.sort_values('energy',ignore_index = True)
     outputFilePath = os.path.join(working_dir,'gnd_structures_from_hqa.json')
     gnd_dataframe.to_json(outputFilePath, indent = 2)
-
-
 

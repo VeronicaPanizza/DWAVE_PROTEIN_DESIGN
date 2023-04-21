@@ -144,10 +144,10 @@ def getCorrectedEnergyMap(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
             y = np.concatenate((y, n_vec - n_vec_gnd))
             
             
-
+    satisfied_on = False
     if len(x) == 0 and len(y)==0:                                               # If there are no vectors in x, then the target structure
         print('\n Criteria are satisfied before optimization')                  # already occupies the lowest position in energy spectrum 
-        return                                                                  # for every sequence.
+        satisfied_on = True                                                     # for every sequence.
         
     # --------------------------------------------------------------------------------------#
     # EVALUATE CURRENT ENERGY OF LOW-ENERGY STRUCTURES;
@@ -156,51 +156,53 @@ def getCorrectedEnergyMap(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
 
     lr0 = 1 / (2*((DICT_SIZE + DICT_SIZE**.5) / 2) ** .5)
     lr = lr0 / (1 + CYCLE * 3)
+    if not satisfied_on:
+        for count in range(1000):
+            if np.sum(eMap) < 0:
+                eMap = eMap - 2 * np.sum(eMap) / DICT_SIZE**2
+            dist.append(np.linalg.norm(eMap - eMapReal))
 
-    for count in range(1000):
-        if np.sum(eMap) < 0:
-            eMap = eMap - 2 * np.sum(eMap) / 9
-        dist.append(np.linalg.norm(eMap - eMapReal))
-
-        values_x = np.sum(eMap * x, axis = 1)                                   # Evaluate the energy of selected sequences on selected 
-                                                                                # structures using current energy map;
-        values_y = np.sum(eMap*y,axis=1) - minimum_gap                                          
-        
-        lowest_value_x, lowest_value_y = 0,0
-
-        if len(values_x) > 0:
-            lowest_value_x = min(values_x)
-        if len(values_y) > 0:
-            lowest_value_y = min(values_y)
-
-        opt_x, opt_y = True, True
-        
-        if lowest_value_x < lowest_value_y:
-            opt_y = False
-            lowest_value = lowest_value_x
-        else:
-            opt_x = False
-            lowest_value = lowest_value_y
-
-        if lowest_value >= 0:                                                   # All constraints are satisfied;
-            print('\n All criteria are satisfied!')
-            break
-
-        if opt_x:
-            pos_lowest_value_x = [x for x in range(len(values_x)) \
-                                  if values_x[x] == lowest_value_x]             # Identify the most violated constraint;
-            update = np.mean(x[pos_lowest_value_x],axis=0)
-
-        elif opt_y:
-            pos_lowest_value_y = [y for y in range(len(values_y)) \
-                                  if values_y[y] == lowest_value_y]             # Identify the most violated constraint;
-            update = np.mean(y[pos_lowest_value_y],axis=0)
+            values_x = np.sum(eMap * x, axis = 1)                                   # Evaluate the energy of selected sequences on selected 
+                                                                                    # structures using current energy map;
+            values_y = np.sum(eMap*y,axis=1) - minimum_gap                                          
             
-        update = update / np.linalg.norm(update)
-        eMap = eMap + update * lr                                               # Update current energy map using `x` of most violated constraint;          
-        eMap = eMap / np.linalg.norm(eMap)                                      # Normalize new energy map;
-        eMap = np.reshape(eMap,(1,-1))                                          # Reshape new energy map (array-like);
+            lowest_value_x, lowest_value_y = 0,0
 
+            if len(values_x) > 0:
+                lowest_value_x = min(values_x)
+            if len(values_y) > 0:
+                lowest_value_y = min(values_y)
+
+            opt_x, opt_y = True, True
+            
+            if lowest_value_x < lowest_value_y:
+                opt_y = False
+                lowest_value = lowest_value_x
+            else:
+                opt_x = False
+                lowest_value = lowest_value_y
+
+            if lowest_value >= 0:                                                   # All constraints are satisfied;
+                print('\n All criteria are satisfied!')
+                break
+
+            if opt_x:
+                pos_lowest_value_x = [x for x in range(len(values_x)) \
+                                    if values_x[x] == lowest_value_x]             # Identify the most violated constraint;
+                update = np.mean(x[pos_lowest_value_x],axis=0)
+
+            elif opt_y:
+                pos_lowest_value_y = [y for y in range(len(values_y)) \
+                                    if values_y[y] == lowest_value_y]             # Identify the most violated constraint;
+                update = np.mean(y[pos_lowest_value_y],axis=0)
+                
+            update = update / np.linalg.norm(update)
+            eMap = eMap + update * lr                                               # Update current energy map using `x` of most violated constraint;          
+            eMap = eMap / np.linalg.norm(eMap)                                      # Normalize new energy map;
+            eMap = np.reshape(eMap,(1,-1))                                          # Reshape new energy map (array-like);
+    else:
+        count=0
+        dist.append(0)
 
     print('\n Number of iterations:',(count+1))
 
