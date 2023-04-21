@@ -13,6 +13,8 @@ def get_eMap(DICT_SIZE):
     eMap = np.random.random((DICT_SIZE,DICT_SIZE)) - .5 
     eMap = eMap + eMap.transpose() 
     eMap = eMap / np.linalg.norm(eMap)
+    if np.sum(eMap) < 0:
+        eMap = eMap - 2 * np.sum(eMap) / DICT_SIZE**2
     
     return eMap
 
