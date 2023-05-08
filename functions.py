@@ -121,8 +121,8 @@ def get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON = False):
     # l_compos = (Nx - 1) * (Ny - 1) * (np.max(e_map) - np.min(e_map)) / 6
     # l_exclud = l_compos
 
-    l_compos = 2.2
-    l_exclud = 2.2
+    l_compos = 2.1 #= 2.2
+    l_exclud = 2.1 #= 2.2
 
     def pos_q(i,m):
         return i * (D-1) + m 
@@ -194,6 +194,21 @@ def get_qubo(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE,AVG_ON = False):
     np.savetxt('offset.txt',np.array([offset]))
 
 # --------------------------------------------------------------------------------------#
+def is_palindrome(sequence):
+    # sequence with dimension        = (#sequences, length);
+
+    vector = np.zeros(len(sequence))
+    for id_s, s in enumerate(sequence):
+        if (s==s[::-1]).all():
+            vector[id_s] = 1
+
+    # Output:
+    #   vector of shape: (#sequences,);
+    #   vector content : 1 (0) if sequence is (not) palindrome;
+    return vector.astype(int)
+
+# --------------------------------------------------------------------------------------#
+
 def validate(EXPERIMENT_IDX, state):
     state = state[0]
     with open('experiment.json','r') as channel:

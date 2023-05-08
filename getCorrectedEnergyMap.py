@@ -39,7 +39,6 @@ def getCorrectedEnergyMap(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
     S_IND                   = int(data["TARGET_STRUCTURE"])                     # Index associated with the DESIGNABLE target structure;
     DICT_SIZE               = int(data["DICT_SIZE"])                            # Dictionary size;
     PROBABILITY_THRESHOLD   = data['PROBABILITY_THRESHOLD']
-    # gMODE                    = str(data['MODE'])
     MAX_CYCLES              = int(data['MAX_CYCLES'])
     
     BETA = DICT_SIZE
@@ -87,12 +86,14 @@ def getCorrectedEnergyMap(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
 
     
     sequences = np.array(list(gndDataFrame['sequence']))                                        # Exctract all sequences;
+    
     sequences_reduced, idx_reverse = np.unique(sequences,axis=0,return_inverse=True)            # Remove redundant sequences and keep track of the original set of sequences;
+    palindrome = functions.is_palindrome(sequences_reduced)
     N_SEQUENCES = len(sequences_reduced)
     
     n_vec_target = functions.n_vector(sequences_reduced, target_cmap,DICT_SIZE)                 # Mount all sequences obtained from Q.A. on the target structure;
     n_vec_target = n_vec_target[0,:,:]                                                          # Add a new axis to n_vec_target;
-    
+    N_STRUCTURES = max(gndDataFrame['structure'])+1                                             # Number of structures (folding by full enumeration);
     
     # --------------------------------------------------------------------------------------#
     # EXTRACT PARAMETERS ENETERING THE SET OF INEQUALITIES;
@@ -109,14 +110,17 @@ def getCorrectedEnergyMap(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
 
         reducedGndDataFrame = gndDataFrame[gndDataFrame.index.isin(df_idx)]                              
         reducedGndDataFrame = reducedGndDataFrame.sort_values('energy',ignore_index=True)
-        # N_STRUCTURES = len(reducedGndDataFrame)
+        
+        n_eff_structures = N_STRUCTURES
+        if palindrome[seq_idx]==False:
+            n_eff_structures = 2*N_STRUCTURES
+        
+        replica = len(reducedGndDataFrame) / n_eff_structures
+        print('Duplicates:',replica)
 
+        reducedGndDataFrame = reducedGndDataFrame.drop_duplicates(subset=['structure','verse'],ignore_index=True)
 
         # First learning process: learningy by energy;
-        
-        # energy_threshold1 = np.sum(eMapReal * n_vec_target[seq_idx],axis=1)[0]        
-        # energy_threshold2 = min(reducedGndDataFrame['energy']) + 1
-        # energy_threshold = min(energy_threshold1, energy_threshold2)
         
         energy_threshold = np.sum(eMapReal * n_vec_target[seq_idx],axis=1)[0]        
         

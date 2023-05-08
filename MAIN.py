@@ -22,8 +22,8 @@ def MAIN(EXPERIMENT_IDX,heatmap,run):
     
     fig = plt.figure()
     
-    for iteration in range(5): # range(MAX_CYCLES):
+    for iteration in range(MAX_CYCLES):
         getGndSequences(EXPERIMENT_IDX,heatmap,run,iteration)
         getGndStructures(EXPERIMENT_IDX,heatmap,run,iteration)
         getCorrectedEnergyMap(EXPERIMENT_IDX,heatmap,run,iteration)
-        functions.get_drawing(run,iteration)
+        # functions.get_drawing(run,iteration)

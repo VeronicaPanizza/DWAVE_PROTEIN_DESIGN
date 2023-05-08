@@ -9,9 +9,9 @@ import shutil
 use_real_pot    = False
 use_seed        = True
 
-EXPERIMENT_IDX  = 5
+EXPERIMENT_IDX  = 4
 N_RUNS          = 1
-SEED            = 7
+SEED            = 4 
 heatmap         = 0
 
 full_data   = pd.read_json('experiment.json')

@@ -125,7 +125,7 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
 
     energy_direct   = np.sum(n_vec_direct * eMap, axis = 2)                         # Evaluate energy for direct housing of sequences;
     energy_inverse  = np.sum(n_vec_inverse * eMap,axis = 2)                         # Evaluate energy for inverse housing of sequences;
-
+    palindrome      = functions.is_palindrome(sequences)
 
     for sequence_idx, sequence in enumerate(sequences):
         for structure_idx in range(N_STRUCTURES):
@@ -138,11 +138,12 @@ def getGndStructures(EXPERIMENT_IDX,HEATMAP,RUN,CYCLE):
             gnd_data['structure'].append(structure_idx)
             gnd_data['verse'].append('Direct')
 
-            gnd_data['energy'].append(eInverse)
-            gnd_data['n_vec'].append(n_vec_inverse[structure_idx,sequence_idx])
-            gnd_data['sequence'].append(sequence)                               
-            gnd_data['structure'].append(structure_idx)
-            gnd_data['verse'].append('Inverse')
+            if palindrome[sequence_idx]==False:
+                gnd_data['energy'].append(eInverse)
+                gnd_data['n_vec'].append(n_vec_inverse[structure_idx,sequence_idx])
+                gnd_data['sequence'].append(sequence)                               
+                gnd_data['structure'].append(structure_idx)
+                gnd_data['verse'].append('Inverse')
 
 
     gnd_dataframe = pd.DataFrame.from_dict(gnd_data)

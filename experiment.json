@@ -63,7 +63,7 @@
         "TARGET_STRUCTURE": 176,
         "PROBABILITY_THRESHOLD": 0.8,
         "MODE": "slow",
-        "MAX_CYCLES":20,
+        "MAX_CYCLES":5,
         "QA_ON":0,
         "SA_ON":0,
         "HQA_ON":1
