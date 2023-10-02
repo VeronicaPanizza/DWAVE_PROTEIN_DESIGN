@@ -3,11 +3,10 @@ import numpy as np
 from numpy import linalg
 import pandas as pd
 import json
-from IPython.display import display
 
-
-N_RUNS          = 30
-EXPERIMENT_IDX  = 0
+SEED            = 2
+N_RUNS          = 1
+EXPERIMENT_IDX  = 5
 
 with open('experiment.json', 'r') as f:      
     full_data = json.load(f)
@@ -29,8 +28,6 @@ BETA = DICT_SIZE
 if os.path.isfile('deeperAnalysis.json'):
     os.remove('deeperAnalysis.json')
 
-
-
 data_out                                = {}
 data_out['Run']                         = []
 data_out['Cycle']                       = []
@@ -40,13 +37,13 @@ data_out['Distance']                    = []
 
 
 # LOADING RESULTS OF FOLDING PROCESS;
-for RUN in range(N_RUNS):
-        
+for RUN in range(SEED,N_RUNS+SEED):
+    MAX_CYCLES=5    
     for CYCLE in range(MAX_CYCLES):
         print(f'\n RUN: {RUN} \t CYCLE:', CYCLE,'\n')
         
-        f_curr = os.path.join(f'{EXPERIMENT_NAME}_run{RUN}',f'cycle_{CYCLE}')
-        f_next = os.path.join(f'{EXPERIMENT_NAME}_run{RUN}', f'cycle_{CYCLE+1}')
+        f_curr = os.path.join('heatmap_0',f'run_{RUN}',f'cycle_{CYCLE}')
+        f_next = os.path.join('heatmap_0',f'run_{RUN}', f'cycle_{CYCLE+1}')
         
         fp = os.path.join(f_curr,f'dict_size_{DICT_SIZE}.txt')
         tmp_map = np.loadtxt(fp, delimiter=' ')
@@ -56,7 +53,7 @@ for RUN in range(N_RUNS):
         df = df.sort_values(['energy'],ignore_index = True)
         
         n_structures = max(df['structure']) + 1 
-        n_sequences = len(df) / n_structures
+        n_sequences = 0
         
         sequences = np.vstack(df['sequence'])                                         
         r_sequences, r_idxs = np.unique(sequences, axis = 0, return_inverse=True)       
@@ -98,7 +95,6 @@ for RUN in range(N_RUNS):
         data['Target_position']  = FIRST_POS
         
         data = pd.DataFrame(data)
-        display(data)
         
         foldable_percentage         = 0
         target_foldable_percentage  = 0        
