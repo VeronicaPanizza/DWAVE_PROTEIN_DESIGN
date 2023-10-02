@@ -6,4 +6,6 @@ CONTENT OF THE PROJECT:
 - Start_emaps folder : contains energy maps that can be used as seeds to initialize the algorithm;
 - experiment.json    : to be edited, initializes details concerning the simulation;
 - TMP.py             : is the master python file, the one that is meant to be runned 
-                      [calls MAIN.py --> calls N_CYCLE times (getGndSequences.py -> getGndStructures.py -> getCorrectedEnergyMap.py) ]
+
+
+  TMP.py calls MAIN.py --> calls N_CYCLE times (getGndSequences.py -> getGndStructures.py -> getCorrectedEnergyMap.py)
